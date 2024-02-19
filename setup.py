@@ -4,9 +4,9 @@ with open("README.md") as fp:
     long_description = fp.read()
 
 setup(
-    name="python-steam-api",
-    version="1.2.2",
-    description="Python Client wrapper for Steam API",
+    name="async-python-steam-api",
+    version="1.0.0",
+    description="Async Python Client wrapper for Steam API",
     long_description=long_description,
     long_description_content_type="text/markdown",
     keywords=[
@@ -19,7 +19,7 @@ setup(
     author_email="david.asal@hotmail.com",
     url="https://github.com/deivit24/steam-python-sdk",
     packages=find_packages(),
-    install_requires=["requests", "python-decouple", "beautifulsoup4", "charset-normalizer"],
+    install_requires=["beautifulsoup4", "aiohttp"],
     license="MIT",
     # https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
