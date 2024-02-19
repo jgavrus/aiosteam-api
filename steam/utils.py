@@ -1,33 +1,35 @@
+import json
 from urllib.parse import urlencode
 
-
-def buildUrlWithParams(url: str, key: str, params={}) -> str:
-    encoded = urlencode(cleanDict(params))
-    return (
-        url + "?key=" + key
-        if (len(encoded) == 0)
-        else (url + "?key=" + key + "&" + encoded)
-    )
+import aiohttp
+from aiohttp.client import ClientResponse
 
 
-def buildUrlWithParamsForSearch(url: str, search: str, params={}) -> str:
-    encoded = urlencode(cleanDict(params))
-    return (
-        url + "?term=" + search
-        if (len(encoded) == 0)
-        else (url + "?term=" + search + "&" + encoded)
-    )
+def build_url_with_params(url: str, key: str, params=None) -> str:
+    if params is None:
+        params = {}
+    encoded = urlencode(clean_dict(params))
+    return url + "?key=" + key if len(encoded) == 0 else (url + "?key=" + key + "&" + encoded)
 
 
-def cleanDict(x: dict = {}) -> dict:
+def build_url_with_params_for_search(url: str, search: str, params=None) -> str:
+    if params is None:
+        params = {}
+    encoded = urlencode(clean_dict(params))
+    return url + "?term=" + search if (len(encoded) == 0) else (url + "?term=" + search + "&" + encoded)
+
+
+def clean_dict(x=None) -> dict:
+    if x is None:
+        x = {}
     result = {}
     for key in x:
-        if x[key] is not None:
+        if x[key]:
             # Check If List
-            if isinstance(x[key], (list,)):
+            if isinstance(x[key], list):
                 result[key] = ",".join(x[key])
             # Check If Boolean
-            elif isinstance(x[key], (bool)):
+            elif isinstance(x[key], bool):
                 if x[key] is True:
                     result[key] = "true"
                 else:
@@ -38,10 +40,29 @@ def cleanDict(x: dict = {}) -> dict:
     return result
 
 
-def mergeDict(x: dict, y: dict) -> dict:
-    z = cleanDict(x)
-    z.update(cleanDict(y))
+def merge_dict(x: dict, y: dict) -> dict:
+    z = clean_dict(x)
+    z.update(clean_dict(y))
     return z
+
+
+async def validator(result: ClientResponse) -> str or dict:
+    try:
+        body = await result.json()
+    except aiohttp.ContentTypeError:
+        body = await result.text()
+    except Exception as e:
+        print(e)
+        body = {}
+
+    if isinstance(body, dict) and body.get("code"):
+        raise Exception(body.get("description"))
+    elif result.status >= 400:
+        raise Exception(f"{result.status}, {result.reason}")
+    elif not body:
+        return "OK"
+    else:
+        return body
 
 
 def retry(times, exceptions):
@@ -51,21 +72,27 @@ def retry(times, exceptions):
     in ``exceptions`` are thrown
     :param times: The number of times to repeat the wrapped function/method
     :type times: Int
-    :param Exceptions: Lists of exceptions that trigger a retry attempt
-    :type Exceptions: Tuple of Exceptions
+    :param exceptions: Lists of exceptions that trigger a retry attempt
+    :type exceptions: Tuple of Exceptions
     """
+
     def decorator(func):
-        def newfn(*args, **kwargs):
-            attempt = 0
-            while attempt < times:
+        async def new_fn(*args, **kwargs):
+            for attempt in range(times):
                 try:
-                    return func(*args, **kwargs)
+                    return await func(*args, **kwargs)
                 except exceptions:
-                    print(
-                        'Exception thrown when attempting to run %s, attempt '
-                        '%d of %d' % (func, attempt, times)
-                    )
-                    attempt += 1
+                    print(f'Exception thrown when attempting to run {func.__name__}, attempt {attempt + 1} of {times}')
             return func(*args, **kwargs)
-        return newfn
+
+        return new_fn
+
     return decorator
+
+
+def create_session(fn):
+    async def wrapper(*args, **kwargs):
+        async with aiohttp.ClientSession() as session:
+            return await fn(*args, session=session, **kwargs)
+
+    return wrapper

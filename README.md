@@ -1,22 +1,16 @@
+# Framework still in developing
+
 # Get Started
 
 ## Installation
 
-`pip install python-steam-api`
+`pip install https://github.com/jgavrus/async-python-steam-api`
 
-## Create Steam API web key
+## Create Steam API web "STEAM_API_KEY"'
 
-[Steam API Web key](https://steamcommunity.com/dev/apikey)
+[Steam API Web "STEAM_API_KEY"](https://steamcommunity.com/dev/api"STEAM_API_KEY")
 
-Follow instructions to get API Key
-
-## Create .env file
-
-From root of your project
-
-`touch .env`
-
-`echo "STEAM_API_KEY=<YOUR_STEAM_API KEY>" >> .env`
+Follow instructions to get API "STEAM_API_KEY"'
 
 # Basic Usage
 
@@ -24,12 +18,10 @@ From root of your project
 
 ```python
 from steam import Steam
-from decouple import config
 
-KEY = config("STEAM_API_KEY")
-steam = Steam(KEY)
+steam = Steam("STEAM_API_KEY")
 
-steam.users.search_user("the12thchairman")
+steam.users.search_user("jeygavrus")
 ```
 
 Response
@@ -37,21 +29,22 @@ Response
 ```json
 {
   "player": {
-    "steamid": "76561198995017863",
+    "steamid": "76561198144619553",
     "communityvisibilitystate": 3,
     "profilestate": 1,
-    "personaname": "The12thChairman",
-    "profileurl": "https://steamcommunity.com/id/the12thchairman/",
-    "avatar": "https://avatars.akamai.steamstatic.com/427ef7d5f8ad7b21678f69bc8afc95786cf38fe6.jpg",
-    "avatarmedium": "https://avatars.akamai.steamstatic.com/427ef7d5f8ad7b21678f69bc8afc95786cf38fe6_medium.jpg",
-    "avatarfull": "https://avatars.akamai.steamstatic.com/427ef7d5f8ad7b21678f69bc8afc95786cf38fe6_full.jpg",
-    "avatarhash": "427ef7d5f8ad7b21678f69bc8afc95786cf38fe6",
-    "lastlogoff": 1659923870,
+    "personaname": "stef1k",
+    "profileurl": "https://steamcommunity.com/id/jeygavrus/",
+    "avatar": "https://avatars.steamstatic.com/ba6060e3847fb5571a4c28f0994884d21fbfb1a2.jpg",
+    "avatarmedium": "https://avatars.steamstatic.com/ba6060e3847fb5571a4c28f0994884d21fbfb1a2_medium.jpg",
+    "avatarfull": "https://avatars.steamstatic.com/ba6060e3847fb5571a4c28f0994884d21fbfb1a2_full.jpg",
+    "avatarhash": "ba6060e3847fb5571a4c28f0994884d21fbfb1a2",
+    "lastlogoff": 1704764074,
     "personastate": 1,
+    "realname": "Євгеній",
     "primaryclanid": "103582791429521408",
-    "timecreated": 1570311509,
+    "timecreated": 1405203743,
     "personastateflags": 0,
-    "loccountrycode": "US"
+    "loccountrycode": "UA"
   }
 }
 ```
@@ -59,15 +52,14 @@ Response
 ### Getting User details by steam id
 
 ```python
+import asyncio
+
 from steam import Steam
-from decouple import config
 
-KEY = config("STEAM_API_KEY")
+steam = Steam("STEAM_API_KEY")
 
-steam = Steam(KEY)
-
-# arguments: steamid
-user = steam.users.get_user_details("76561198995017863")
+# arguments: steam_id
+user = asyncio.run(steam.users.get_user_details("76561198144619553"))
 ```
 
 Response
@@ -75,21 +67,22 @@ Response
 ```json
 {
   "player": {
-    "steamid": "76561198995017863",
+    "steamid": "76561198144619553",
     "communityvisibilitystate": 3,
     "profilestate": 1,
-    "personaname": "The12thChairman",
-    "profileurl": "https://steamcommunity.com/id/the12thchairman/",
-    "avatar": "https://avatars.akamai.steamstatic.com/427ef7d5f8ad7b21678f69bc8afc95786cf38fe6.jpg",
-    "avatarmedium": "https://avatars.akamai.steamstatic.com/427ef7d5f8ad7b21678f69bc8afc95786cf38fe6_medium.jpg",
-    "avatarfull": "https://avatars.akamai.steamstatic.com/427ef7d5f8ad7b21678f69bc8afc95786cf38fe6_full.jpg",
-    "avatarhash": "427ef7d5f8ad7b21678f69bc8afc95786cf38fe6",
-    "lastlogoff": 1659923870,
+    "personaname": "stef1k",
+    "profileurl": "https://steamcommunity.com/id/jeygavrus/",
+    "avatar": "https://avatars.steamstatic.com/ba6060e3847fb5571a4c28f0994884d21fbfb1a2.jpg",
+    "avatarmedium": "https://avatars.steamstatic.com/ba6060e3847fb5571a4c28f0994884d21fbfb1a2_medium.jpg",
+    "avatarfull": "https://avatars.steamstatic.com/ba6060e3847fb5571a4c28f0994884d21fbfb1a2_full.jpg",
+    "avatarhash": "ba6060e3847fb5571a4c28f0994884d21fbfb1a2",
+    "lastlogoff": 1704764074,
     "personastate": 1,
+    "realname": "Євгеній",
     "primaryclanid": "103582791429521408",
-    "timecreated": 1570311509,
+    "timecreated": 1405203743,
     "personastateflags": 0,
-    "loccountrycode": "US"
+    "loccountrycode": "UA"
   }
 }
 ```
@@ -97,16 +90,14 @@ Response
 ### Getting Friends List
 
 ```python
+import asyncio
+
 from steam import Steam
-from decouple import config
 
-KEY = config("STEAM_API_KEY")
+steam = Steam("STEAM_API_KEY")
 
-
-steam = Steam(KEY)
-
-# arguments: steamid
-user = steam.users.get_user_friends_list("76561198995017863")
+# arguments: steam_id
+user = asyncio.run(steam.users.get_user_friends_list("76561198995017863"))
 ```
 
 Response
@@ -179,106 +170,92 @@ Response
 ### Getting Users Recently Played Games
 
 ```python
+import asyncio
+
 from steam import Steam
-from decouple import config
 
-KEY = config("STEAM_API_KEY")
+steam = Steam("STEAM_API_KEY")
 
-
-steam = Steam(KEY)
-
-# arguments: steamid
-user = steam.users.get_user_recently_played_games("76561198995017863")
+# arguments: steam_id
+user = asyncio.run(steam.users.get_user_recently_played_games("76561198144619553"))
 ```
 
 ### Getting User Owned Games
 
 ```python
+import asyncio
+
 from steam import Steam
-from decouple import config
 
-KEY = config("STEAM_API_KEY")
+steam = Steam("STEAM_API_KEY")
 
-
-steam = Steam()
-
-# arguments: steamid
-user = steam.users.get_owned_games("76561198995017863")
+# arguments: steam_id
+user = asyncio.run(steam.users.get_owned_games("76561198144619553"))
 ```
 
 ### Getting User Steam Level
 
 ```python
+import asyncio
+
 from steam import Steam
-from decouple import config
 
-KEY = config("STEAM_API_KEY")
+steam = Steam("STEAM_API_KEY")
 
-
-steam = Steam(KEY)
-
-# arguments: steamid
-user = steam.users.get_user_steam_level("76561198995017863")
+# arguments: steam_id
+user = asyncio.run(steam.users.get_user_steam_level("76561198144619553"))
 ```
 
 ### Getting User Badges
 
 ```python
+import asyncio
+
 from steam import Steam
-from decouple import config
 
-KEY = config("STEAM_API_KEY")
+steam = Steam("STEAM_API_KEY")
 
-
-steam = Steam(KEY)
-
-# arguments: steamid
-user = steam.users.get_user_badges("76561198995017863")
+# arguments: steam_id
+user = asyncio.run(steam.users.get_user_badges("76561198144619553"))
 ```
 
 ### Getting Community Badge Progress
 
 ```python
+import asyncio
+
 from steam import Steam
-from decouple import config
 
-KEY = config("STEAM_API_KEY")
+steam = Steam("STEAM_API_KEY")
 
-
-steam = Steam(KEY)
-
-# arguments: steamid, badgeid
-user = steam.users.get_community_badge_progress("<steam_id>", "<badge_id>")
+# arguments: steam_id, badge_id
+user = asyncio.run(steam.users.get_community_badge_progress("<steam_id>", "<badge_id>"))
 ```
 
 ### Getting User Public Account
 
 ```python
+import asyncio
+
 from steam import Steam
-from decouple import config
 
-KEY = config("STEAM_API_KEY")
+steam = Steam("STEAM_API_KEY")
 
-
-steam = Steam(KEY)
-
-# arguments: steamid
-user = steam.users.get_account_public_info("<steam_id>")
+# arguments: steam_id
+user = asyncio.run(steam.users.get_account_public_info("<steam_id>"))
 ```
 
 ### Searching for Games
 
 ```python
+import asyncio
+
 from steam import Steam
-from decouple import config
 
-KEY = config("STEAM_API_KEY")
-
-
-steam = Steam(KEY)
+steam = Steam("STEAM_API_KEY")
 
 # arguments: search
-user = steam.apps.search_games("terr")
+user = asyncio.run(steam.apps.search_games("terr"))
 ```
 
 Response
@@ -329,43 +306,45 @@ Response
 
 #### Parameters:
 
-- `app_id` (int): The unique App ID of the app you want to retrieve details for. For example, 105600 corresponds to "Terraria"
+- `app_id` (int): The unique App ID of the app you want to retrieve details for. For example, 105600 corresponds to "
+  Terraria"
 
 - `country` (str): An optional parameter representing the ISO Country Code. The default value is "US."
 
-- `filters` (str): An optional parameter that allows you to specify a list of keys to return in the app details. If not provided, it defaults to "basic." The available filter options include:
+- `filters` (str): An optional parameter that allows you to specify a list of "STEAM_API_KEY"s to return in the app
+  details. If not provided, it defaults to "basic." The available filter options include:
 
-- `basic` (Default): Returns essential information like type, name, steam_appid, required_age, is_free, dlc, detailed_description, short_description, about_the_game, supported_languages, header_image, website, pc_requirements, mac_requirements, and linux_requirements.
+- `basic` (Default): Returns essential information like type, name, steam_appid, required_age, is_free, dlc,
+  detailed_description, short_description, about_the_game, supported_languages, header_image, website, pc_requirements,
+  mac_requirements, and linux_requirements.
 
 - Optional filters (Specify one or more of these as a comma-separated string):
-  - controller_support
-  - dlc
-  - fullgame
-  - legal_notice
-  - developers
-  - demos
-  - price_overview
-  - metacritic
-  - categories
-  - genres
-  - screenshots
-  - movies
-  - recommendations
-  - achievements
-Response
+    - controller_support
+    - dlc
+    - fullgame
+    - legal_notice
+    - developers
+    - demos
+    - price_overview
+    - metacritic
+    - categories
+    - genres
+    - screenshots
+    - movies
+    - recommendations
+    - achievements
+      Response
 
 ```python
+import asyncio
+
 from steam import Steam
-from decouple import config
-
-KEY = config("STEAM_API_KEY")
-
 
 terraria_app_id = 105600
-steam = Steam(KEY)
+steam = Steam("STEAM_API_KEY")
 
 # arguments: app_id
-user = steam.apps.get_app_details(terraria_app_id)
+user = asyncio.run(steam.apps.get_app_details(terraria_app_id))
 
 ```
 
@@ -381,11 +360,11 @@ user = steam.apps.get_app_details(terraria_app_id)
       "is_free": false,
       "controller_support": "full",
       "dlc": [
-      409210,
-      1323320
+        409210,
+        1323320
       ],
-      "detailed_description": "Dig, Fight, Explore, Build:  The very world is at your fingertips as you fight for survival, fortune, and glory.   Will you delve deep into cavernous expanses in search of treasure and raw materials with which to craft ever-evolving gear, machinery, and aesthetics?   Perhaps you will choose instead to seek out ever-greater foes to test your mettle in combat?   Maybe you will decide to construct your own city to house the host of mysterious allies you may encounter along your travels? <br><br>In the World of Terraria, the choice is yours!<br><br>Blending elements of classic action games with the freedom of sandbox-style creativity, Terraria is a unique gaming experience where both the journey and the destination are completely in the player’s control.   The Terraria adventure is truly as unique as the players themselves!  <br><br>Are you up for the monumental task of exploring, creating, and defending a world of your own?  <br><br>\t\t\t\t\t\t\t<strong>Key features:</strong><br>\t\t\t\t\t\t\t<ul class=\"bb_ul\"><li>Sandbox Play<br>\t\t\t\t\t\t\t</li><li> Randomly generated worlds<br>\t\t\t\t\t\t\t</li><li>Free Content Updates<br>\t\t\t\t\t\t\t</li></ul>",
-      "about_the_game": "Dig, Fight, Explore, Build:  The very world is at your fingertips as you fight for survival, fortune, and glory.   Will you delve deep into cavernous expanses in search of treasure and raw materials with which to craft ever-evolving gear, machinery, and aesthetics?   Perhaps you will choose instead to seek out ever-greater foes to test your mettle in combat?   Maybe you will decide to construct your own city to house the host of mysterious allies you may encounter along your travels? <br><br>In the World of Terraria, the choice is yours!<br><br>Blending elements of classic action games with the freedom of sandbox-style creativity, Terraria is a unique gaming experience where both the journey and the destination are completely in the player’s control.   The Terraria adventure is truly as unique as the players themselves!  <br><br>Are you up for the monumental task of exploring, creating, and defending a world of your own?  <br><br>\t\t\t\t\t\t\t<strong>Key features:</strong><br>\t\t\t\t\t\t\t<ul class=\"bb_ul\"><li>Sandbox Play<br>\t\t\t\t\t\t\t</li><li> Randomly generated worlds<br>\t\t\t\t\t\t\t</li><li>Free Content Updates<br>\t\t\t\t\t\t\t</li></ul>",
+      "detailed_description": "Dig, Fight, Explore, Build:  The very world is at your fingertips as you fight for survival, fortune, and glory.   Will you delve deep into cavernous expanses in search of treasure and raw materials with which to craft ever-evolving gear, machinery, and aesthetics?   Perhaps you will choose instead to seek out ever-greater foes to test your mettle in combat?   Maybe you will decide to construct your own city to house the host of mysterious allies you may encounter along your travels? <br><br>In the World of Terraria, the choice is yours!<br><br>Blending elements of classic action games with the freedom of sandbox-style creativity, Terraria is a unique gaming experience where both the journey and the destination are completely in the player’s control.   The Terraria adventure is truly as unique as the players themselves!  <br><br>Are you up for the monumental task of exploring, creating, and defending a world of your own?  <br><br>\t\t\t\t\t\t\t<strong> features:</strong><br>\t\t\t\t\t\t\t<ul class=\"bb_ul\"><li>Sandbox Play<br>\t\t\t\t\t\t\t</li><li> Randomly generated worlds<br>\t\t\t\t\t\t\t</li><li>Free Content Updates<br>\t\t\t\t\t\t\t</li></ul>",
+      "about_the_game": "Dig, Fight, Explore, Build:  The very world is at your fingertips as you fight for survival, fortune, and glory.   Will you delve deep into cavernous expanses in search of treasure and raw materials with which to craft ever-evolving gear, machinery, and aesthetics?   Perhaps you will choose instead to seek out ever-greater foes to test your mettle in combat?   Maybe you will decide to construct your own city to house the host of mysterious allies you may encounter along your travels? <br><br>In the World of Terraria, the choice is yours!<br><br>Blending elements of classic action games with the freedom of sandbox-style creativity, Terraria is a unique gaming experience where both the journey and the destination are completely in the player’s control.   The Terraria adventure is truly as unique as the players themselves!  <br><br>Are you up for the monumental task of exploring, creating, and defending a world of your own?  <br><br>\t\t\t\t\t\t\t<strong> features:</strong><br>\t\t\t\t\t\t\t<ul class=\"bb_ul\"><li>Sandbox Play<br>\t\t\t\t\t\t\t</li><li> Randomly generated worlds<br>\t\t\t\t\t\t\t</li><li>Free Content Updates<br>\t\t\t\t\t\t\t</li></ul>",
       "short_description": "Dig, fight, explore, build! Nothing is impossible in this action-packed adventure game. Four Pack also available!",
       "supported_languages": "English, French, Italian, German, Spanish - Spain, Polish, Portuguese - Brazil, Russian, Simplified Chinese",
       "header_image": "https://cdn.akamai.steamstatic.com/steam/apps/105600/header.jpg?t=1666290860",
@@ -412,63 +391,54 @@ user = steam.apps.get_app_details(terraria_app_id)
 ### Getting user app stats
 
 ```python
+import asyncio
+
 from steam import Steam
-from decouple import config
 
-KEY = config("STEAM_API_KEY")
-
-
-steam = Steam(KEY)
+steam = Steam("STEAM_API_KEY")
 
 # arguments: steam_id, app_id
-user = steam.apps.get_user_stats("<steam_id>", "<app_id>")
+user = asyncio.run(steam.apps.get_user_stats("<steam_id>", "<app_id>"))
 ```
 
 ### Getting user app achievements
 
 ```python
+import asyncio
+
 from steam import Steam
-from decouple import config
 
-KEY = config("STEAM_API_KEY")
-
-
-steam = Steam(KEY)
+steam = Steam("STEAM_API_KEY")
 
 # arguments: steam_id, app_id
-user = steam.apps.get_user_achievements("<steam_id>", "<app_id>")
+user = asyncio.run(steam.apps.get_user_achievements("<steam_id>", "<app_id>"))
 ```
-
 
 ### Getting user ban status
 
 ```python
+import asyncio
+
 from steam import Steam
-from decouple import config
 
-KEY = config("STEAM_API_KEY")
-
-
-steam = Steam(KEY)
+steam = Steam("STEAM_API_KEY")
 
 # arguments: steam_id
-user = steam.users.get_player_bans("<steam_id>")
+user = asyncio.run(steam.users.get_player_bans("<steam_id>"))
 ````
-
 
 ```json
 {
-"players":[
+  "players": [
     {
-    "SteamId":"76561198079362196",
-    "CommunityBanned":false,
-    "VACBanned":false,
-    "NumberOfVACBans":0,
-    "DaysSinceLastBan":0,
-    "NumberOfGameBans":0,
-    "EconomyBan":"none"
+      "SteamId": "76561198144619553",
+      "CommunityBanned": false,
+      "VACBanned": false,
+      "NumberOfVACBans": 0,
+      "DaysSinceLastBan": 0,
+      "NumberOfGameBans": 0,
+      "EconomyBan": "none"
     }
-    ]
+  ]
 }
 ```
-

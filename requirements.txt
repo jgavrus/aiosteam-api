@@ -1,4 +1,4 @@
-beautifulsoup4
+beautifulsoup4~=4.12.3
 charset-normalizer
 python-decouple
-requests
+aiohttp~=3.9.3
