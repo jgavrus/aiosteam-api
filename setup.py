@@ -4,15 +4,15 @@ with open("README.md") as fp:
     long_description = fp.read()
 
 setup(
-    name="async-python-steam-api",
+    name="async-python-async_steam-api",
     version="1.0.0",
     description="Async Python Client wrapper for Steam API",
     long_description=long_description,
     long_description_content_type="text/markdown",
     keywords=[
-        "steam",
+        "async_steam",
         "steamapi",
-        "steam community",
+        "async_steam community",
         "api",
     ],
     author="David Salazar",
