@@ -1,4 +1,4 @@
-# Framework still in developing
+# Framework still in development
 
 # Get Started
 
