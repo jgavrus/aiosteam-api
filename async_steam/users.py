@@ -8,7 +8,7 @@ class Users:
         """Constructor for Steam Users class"""
         self.__client = client
 
-    async def search_user(self, search: str) -> dict:
+    async def search_user(self, search: str) -> dict or str:
         """Searches for exact match
 
         Args:
@@ -22,7 +22,7 @@ class Users:
         steam_id = search_response["response"]["steamid"]
         return await self.get_user_details(steam_id)
 
-    async def get_user_details(self, steam_id: str or int, single=True) -> dict:
+    async def get_user_details(self, steam_id: str or int, single=True) -> dict or str:
         """Gets user/player details by async_steam ID
 
         Args:
@@ -33,7 +33,8 @@ class Users:
         user_response = await self.__client.request("get", "/ISteamUser/GetPlayerSummaries/v2/",
                                                     params={"steamids": steam_id})
         if single:
-            return {"player": user_response["response"]["players"][0]}
+            result = user_response["response"]["players"]
+            return {"player": result[0]} if result else 'No match'
         else:
             return {"players": user_response["response"]["players"]}
 
