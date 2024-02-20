@@ -4,9 +4,7 @@
 
 ## Installation
 
-`pip install git+https://github.com/jgavrus/async-python-steam-api`
-
-pip install without git will be added soon
+`pip install async-python-steam-api`
 
 ## Create Steam API web "STEAM_API_KEY"'
 
