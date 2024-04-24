@@ -4,20 +4,21 @@ with open("README.md") as fp:
     long_description = fp.read()
 
 setup(
-    name="async-python-async_steam-api",
-    version="1.0.0",
+    name="aiosteam-api",
+    version="1.0.1",
     description="Async Python Client wrapper for Steam API",
     long_description=long_description,
     long_description_content_type="text/markdown",
     keywords=[
-        "async_steam",
-        "steamapi",
-        "async_steam community",
+        "async steam",
+        "steam api",
+        "async steam community",
         "api",
+        "async"
     ],
-    author="David Salazar",
-    author_email="david.asal@hotmail.com",
-    url="https://github.com/deivit24/steam-python-sdk",
+    author="Yevhenii Havrus",
+    author_email="jeygavrus@gmail.com",
+    url="https://github.com/jgavrus/aiosteam-api",
     packages=find_packages(),
     install_requires=["beautifulsoup4", "aiohttp"],
     license="MIT",

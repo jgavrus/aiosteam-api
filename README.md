@@ -4,7 +4,7 @@
 
 ## Installation
 
-`pip install async-python-steam-api`
+`pip install aiosteam-api`
 
 ## Create Steam API web "STEAM_API_KEY"'
 
@@ -17,7 +17,7 @@ Follow instructions to get API "STEAM_API_KEY"'
 ### Searching for a user
 
 ```python
-from async_steam import Steam
+from aiosteam import Steam
 
 steam = Steam("STEAM_API_KEY")
 
@@ -54,7 +54,7 @@ Response
 ```python
 import asyncio
 
-from async_steam import Steam
+from aiosteam import Steam
 
 steam = Steam("STEAM_API_KEY")
 
@@ -92,7 +92,7 @@ Response
 ```python
 import asyncio
 
-from async_steam import Steam
+from aiosteam import Steam
 
 steam = Steam("STEAM_API_KEY")
 
@@ -172,7 +172,7 @@ Response
 ```python
 import asyncio
 
-from async_steam import Steam
+from aiosteam import Steam
 
 steam = Steam("STEAM_API_KEY")
 
@@ -185,7 +185,7 @@ user = asyncio.run(steam.users.get_user_recently_played_games("76561198144619553
 ```python
 import asyncio
 
-from async_steam import Steam
+from aiosteam import Steam
 
 steam = Steam("STEAM_API_KEY")
 
@@ -198,7 +198,7 @@ user = asyncio.run(steam.users.get_owned_games("76561198144619553"))
 ```python
 import asyncio
 
-from async_steam import Steam
+from aiosteam import Steam
 
 steam = Steam("STEAM_API_KEY")
 
@@ -211,7 +211,7 @@ user = asyncio.run(steam.users.get_user_steam_level("76561198144619553"))
 ```python
 import asyncio
 
-from async_steam import Steam
+from aiosteam import Steam
 
 steam = Steam("STEAM_API_KEY")
 
@@ -224,7 +224,7 @@ user = asyncio.run(steam.users.get_user_badges("76561198144619553"))
 ```python
 import asyncio
 
-from async_steam import Steam
+from aiosteam import Steam
 
 steam = Steam("STEAM_API_KEY")
 
@@ -237,7 +237,7 @@ user = asyncio.run(steam.users.get_community_badge_progress("<steam_id>", "<badg
 ```python
 import asyncio
 
-from async_steam import Steam
+from aiosteam import Steam
 
 steam = Steam("STEAM_API_KEY")
 
@@ -250,7 +250,7 @@ user = asyncio.run(steam.users.get_account_public_info("<steam_id>"))
 ```python
 import asyncio
 
-from async_steam import Steam
+from aiosteam import Steam
 
 steam = Steam("STEAM_API_KEY")
 
@@ -338,7 +338,7 @@ Response
 ```python
 import asyncio
 
-from async_steam import Steam
+from aiosteam import Steam
 
 terraria_app_id = 105600
 steam = Steam("STEAM_API_KEY")
@@ -393,7 +393,7 @@ user = asyncio.run(steam.apps.get_app_details(terraria_app_id))
 ```python
 import asyncio
 
-from async_steam import Steam
+from aiosteam import Steam
 
 steam = Steam("STEAM_API_KEY")
 
@@ -406,7 +406,7 @@ user = asyncio.run(steam.apps.get_user_stats("<steam_id>", "<app_id>"))
 ```python
 import asyncio
 
-from async_steam import Steam
+from aiosteam import Steam
 
 steam = Steam("STEAM_API_KEY")
 
@@ -419,7 +419,7 @@ user = asyncio.run(steam.apps.get_user_achievements("<steam_id>", "<app_id>"))
 ```python
 import asyncio
 
-from async_steam import Steam
+from aiosteam import Steam
 
 steam = Steam("STEAM_API_KEY")
 
