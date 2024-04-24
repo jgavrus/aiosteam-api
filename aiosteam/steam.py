@@ -1,4 +1,4 @@
-from .users import Users
+from .users import UsersClient, User
 from .client import Client
 from .apps import Apps
 
@@ -11,13 +11,21 @@ class Steam:
         if headers is None:
             headers = {}
         client = Client(key, headers=headers)
-        self.__users = Users(client)
+        self.__users = UsersClient(client)
         self.__apps = Apps(client)
 
-    @property
-    def users(self) -> Users:
-        return self.__users
+    async def search_user(self, username: str = None, steam_id: str | int = None) -> User:
+        """Searches for exact match
 
-    @property
+                Args:
+                    username (str): steam user. For example 'the12thchairman'
+                    steam_id (str): steam id (str or int): Steam 64 ID
+        """
+        if username:
+            user = await self.__users.search_user(username)
+        else:
+            user = await self.__users.get_user_details(steam_id)
+        return user
+
     def apps(self) -> Apps:
         return self.__apps
