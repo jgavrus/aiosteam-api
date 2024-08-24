@@ -1,6 +1,5 @@
-from .users import UsersClient, User
-from .requests_client import RequestsClient
-from .apps import Apps
+from aiosteam.clients.requests_client import RequestsClient
+from aiosteam.steam_models import User
 
 
 class Steam:
@@ -10,9 +9,8 @@ class Steam:
         """Constructor for Steam API client"""
         if headers is None:
             headers = {}
-        client = RequestsClient(key, headers=headers)
-        self.__users = UsersClient(client)
-        self.__apps = Apps(client)
+        self.client = RequestsClient(key, headers=headers)
+        self.__users = User
 
     async def search_user(self, username: str = None, steam_id: str | int = None) -> User:
         """Searches for exact match
@@ -22,10 +20,7 @@ class Steam:
                     steam_id (str): steam id (str or int): Steam 64 ID
         """
         if username:
-            user = await self.__users.search_user(username)
+            user = await self.__users.search_user(username, self.client)
         else:
-            user = await self.__users.get_user_details(steam_id)
+            user = await self.__users.get_user_details(steam_id, self.client)
         return user
-
-    def apps(self) -> Apps:
-        return self.__apps

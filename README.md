@@ -1,3 +1,5 @@
+# api on stable version now, but documentation still updating
+
 # Get Started
 
 ## Installation
@@ -22,49 +24,52 @@ steam = Steam("STEAM_API_KEY")
 
 
 async def some_async_foo():
-  user = await steam.search_user("jeygavrus")  # also you can use steam user id for searching
+    user = await steam.search_user("jeygavrus")  # also you can use steam user id for searching
 
 
 asyncio.run(some_async_foo())
 ```
+
 it will return User - a pydantic model with additional methods for getting more detail info.   
 if you want reformat model to dict use ```user.model_dump()``` method.  
-Or ```user.model_dump_json()``` for getting json string.  
+Or ```user.model_dump_json()``` for getting json string.
 
 JSON Response example:
 
 ```json
 {
-  "steam_id" : 76561198144619553,
-  "player_lvl" : null,
-  "community_visibility_state" : 3,
-  "profile_state" : 1,
-  "persona_name" : "stef1k",
-  "profile_url" : "https://steamcommunity.com/id/jeygavrus/",
-  "avatar" : {
-    "avatar" : "https://avatars.steamstatic.com/ba6060e3847fb5571a4c28f0994884d21fbfb1a2.jpg",
-    "avatar_medium" : "https://avatars.steamstatic.com/ba6060e3847fb5571a4c28f0994884d21fbfb1a2_medium.jpg",
-    "avatar_full" : "https://avatars.steamstatic.com/ba6060e3847fb5571a4c28f0994884d21fbfb1a2_full.jpg",
-    "avatar_hash" : "ba6060e3847fb5571a4c28f0994884d21fbfb1a2"
+  "steam_id": 76561198144619553,
+  "player_lvl": null,
+  "community_visibility_state": 3,
+  "profile_state": 1,
+  "persona_name": "stef1k",
+  "profile_url": "https://steamcommunity.com/id/jeygavrus/",
+  "avatar": {
+    "avatar": "https://avatars.steamstatic.com/ba6060e3847fb5571a4c28f0994884d21fbfb1a2.jpg",
+    "avatar_medium": "https://avatars.steamstatic.com/ba6060e3847fb5571a4c28f0994884d21fbfb1a2_medium.jpg",
+    "avatar_full": "https://avatars.steamstatic.com/ba6060e3847fb5571a4c28f0994884d21fbfb1a2_full.jpg",
+    "avatar_hash": "ba6060e3847fb5571a4c28f0994884d21fbfb1a2"
   },
-  "last_logoff" : 1724462578,
-  "persona_state" : 0,
-  "real_name" : "Євгеній",
-  "primary_clan_id" : 103582791429521408,
-  "time_created" : 1405203743,
-  "persona_state_flags" : 0,
-  "loc_country_code" : "UA",
-  "friends" : null,
-  "last_played_games" : null,
-  "owned_games" : null,
-  "user_badges" : null
+  "last_logoff": 1724462578,
+  "persona_state": 0,
+  "real_name": "Євгеній",
+  "primary_clan_id": 103582791429521408,
+  "time_created": 1405203743,
+  "persona_state_flags": 0,
+  "loc_country_code": "UA",
+  "friends": null,
+  "last_played_games": null,
+  "owned_games": null,
+  "user_badges": null
 }
 ```
 
 ### friends, last_played_games, last_played_games, user_badges
+
 By default, these fields are empty. For getting this info - you should use get_* method
 
 Example:
+
 ```python
 import asyncio
 from aiosteam import Steam
@@ -73,11 +78,11 @@ steam = Steam("STEAM_API_KEY")
 
 
 async def some_async_foo():
-  user = await steam.search_user("jeygavrus")  # also you can use steam user id for searching
-  print(user.owned_games) # None
-  games = await user.get_owned_games()
-  print(games) # dict {int_id : OwnedGame}
-  print(user.owned_games) # dict {int_id : OwnedGame}
+    user = await steam.search_user("jeygavrus")  # also you can use steam user id for searching
+    print(user.owned_games)  # None
+    games = await user.get_owned_games()
+    print(games)  # dict {int_id : Game}
+    print(user.owned_games)  # dict {int_id : Game}
 
 
 asyncio.run(some_async_foo())
@@ -90,7 +95,8 @@ Owned games dict example
   20920: {
     "app_id": 20920,
     "name": "The Witcher 2: Assassins of Kings Enhanced Edition",
-    "playtime_two_weeks": 1015, // all time parameters in minutes
+    "playtime_two_weeks": 1015,
+    // all time parameters in minutes
     "playtime_forever": 1994,
     "img_icon_url": "62dd5c627664df1bcabc47727c7dcd7ccab353e9"
   }
@@ -98,6 +104,7 @@ Owned games dict example
 ```
 
 ### Getting Friends List
+
 the same principe as with games
 
 ```python
@@ -113,7 +120,7 @@ async def some_async_foo():
     user_friends = await user.get_user_friends_list()
     print(user_friends)  # list[User]
     print(user.friends)
-  
+
 
 asyncio.run(some_async_foo())
 ```
@@ -152,6 +159,8 @@ Response
 ]
 
 ```
+
+# updated part over. all info below  is not updated yet
 
 ### Searching for Games
 

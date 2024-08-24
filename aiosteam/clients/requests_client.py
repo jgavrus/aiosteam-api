@@ -1,27 +1,38 @@
-import json
+from typing import Optional
 
-import typing
+import aiohttp
 from aiohttp import ClientSession
-from .requests_client import RequestsClient
-from .utils import build_url_with_params_for_search, validator, create_session
 from bs4 import BeautifulSoup
-from .constants import API_APP_DETAILS_URL, API_APP_SEARCH_URL
+
+from .utils import build_url_with_params, merge_dict, retry, validator, build_url_with_params_for_search
 
 
-class Apps:
-    """Steam Apps API client"""
+def create_session(fn):
+    async def wrapper(*args, **kwargs):
+        async with aiohttp.ClientSession() as session:
+            return await fn(*args, session=session, **kwargs)
 
-    def __init__(self, client: RequestsClient):
-        """Constructor for Steam Apps class"""
-        self.__client = client
-        self.__search_url = API_APP_SEARCH_URL
-        self.__app_details_url = API_APP_DETAILS_URL
+    return wrapper
+
+
+class RequestsClient:
+    """Steams API HTTP client"""
+
+    def __init__(self, key: str, headers: dict = None):
+        if not headers:
+            headers = {}
+        """Constructor for TypeForm API client"""
+        self.__headers = merge_dict({"Content-Type": "application/json", "Accept": "application/json"}, headers)
+        self.key = key
+        self.api_base_url = "https://api.steampowered.com"
+        self.search_url = "https://store.steampowered.com/search/suggest"
+        self.app_details_url = "https://store.steampowered.com/api/appdetails"
 
     @create_session
-    async def get_app_details(self, app_id: int, country="US",
-                              filters: typing.Optional[str] = "basic", session: ClientSession = None) -> dict:
+    async def get_app_details(self, app_id: int, country="US", filters: Optional[str] = "basic",
+                              session: ClientSession = None) -> dict:
         """Obtains an apps details
-        
+
         Args:
             app_id (int): App ID. For example 546560 (Half-Life-Alyx)
             country (str): ISO Country Code
@@ -59,35 +70,29 @@ class Apps:
                     recommendations,
                     achievements,
         """
-        response = await session.request('get', self.__app_details_url,
+        response = await session.request('get', self.app_details_url,
                                          params={"appids": app_id, "cc": country, "filters": filters})
-        json_loaded_response = json.loads(await response.text())
-        return json_loaded_response
+        dict_response = await response.json()
+        return dict_response[str(app_id)]['data']
 
-    async def get_user_stats(self, steam_id: int or str, app_id: int or str) -> dict:
-        """Obtains a user's stats for a specific app, includes only completed achievements
-        along with app specific information
-        
-        Args:
-            steam_id (int): Steam 64 ID
-            app_id (int): App ID
-        """
-        response = await self.__client.request("get", "/ISteamUserStats/GetUserStatsForGame/v2/",
-                                               params={"steamid": steam_id, "appid": app_id})
-        return response
+    @retry(times=3, exceptions=(ValueError, TypeError))
+    @create_session
+    async def request(self, method: str, url: str, params=None, headers=None, session: ClientSession = None,
+                      timeout: int = 3, **kwargs) -> str or dict:
 
-    async def get_user_achievements(self, steam_id: int or str, app_id: int or str) -> dict:
-        """Obtains information of the user's achievments in the app
-        
-        Args:
-            steam_id (int): Steam 64 ID
-            app_id (int): App ID
-        """
-        response = await self.__client.request("get", "/ISteamUserStats/GetPlayerAchievements/v1/",
-                                               params={"steamid": steam_id, "appid": app_id})
-        return response
+        if headers is None:
+            headers = {}
+        if params is None:
+            params = {}
 
-    # Is term meant to be any or a string, I'm not familiar enough with async_steam search so I'll leave it as is
+        request_url = build_url_with_params((self.api_base_url + url), self.key, params)
+
+        request_headers = merge_dict(self.__headers, headers)
+
+        resp = await session.request(method, request_url, headers=request_headers, timeout=timeout, **kwargs)
+        return await validator(resp)
+
+    @retry(times=3, exceptions=(ValueError, TypeError))
     @create_session
     async def search_games(self, term, country="US", session: ClientSession = None):
         """Searches for games using the information given
@@ -122,8 +127,8 @@ class Apps:
         return {"apps": apps}
 
     # This should be a private method imo, I don't know how you would like to name them so I'll leave it as is
-    # (Maybe change it to all caps since __search_url and __app_details_url are constants?)
-    def search_url(self, search, country="US"):
+    # (Maybe change it to all caps since search_url and app_details_url are constants?)
+    def create_search_url(self, search, country="US"):
         params = {"f": "games", "cc": country, "realm": 1, "l": "english"}
-        result = build_url_with_params_for_search(self.__search_url, search, params=params)
+        result = build_url_with_params_for_search(self.search_url, search, params=params)
         return result
