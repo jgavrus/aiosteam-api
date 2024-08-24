@@ -6,7 +6,7 @@ from .constants import API_BASE_URL
 from .utils import build_url_with_params, merge_dict, retry, validator, create_session
 
 
-class Client:
+class RequestsClient:
     """Steams API HTTP client"""
 
     def __init__(self, key: str, headers: dict = None):
@@ -19,7 +19,7 @@ class Client:
     @retry(times=3, exceptions=(ValueError, TypeError))
     @create_session
     async def request(self, method: str, url: str, data=None, params=None, headers=None, session: ClientSession = None,
-                      **kwargs) -> str or dict:
+                      timeout: int = 3, **kwargs) -> str or dict:
 
         if headers is None:
             headers = {}
@@ -37,5 +37,6 @@ class Client:
 
         if type(data) is list:
             request_data = json.dumps(data) if data else ""
-        resp = await session.request(method, request_url, data=request_data, headers=request_headers, **kwargs)
+        resp = await session.request(method, request_url, data=request_data, headers=request_headers, timeout=timeout,
+                                     **kwargs)
         return await validator(resp)
