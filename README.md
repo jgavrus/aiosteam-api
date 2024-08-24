@@ -1,4 +1,4 @@
-# Framework still in development
+# Framework now is stable, but documentation readme steel old and steel in work
 
 # Get Started
 
