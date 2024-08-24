@@ -1,7 +1,8 @@
 from typing import Optional, Any
 
-from .client import Client
+from .requests_client import RequestsClient
 from .exceptions.api_errors import NotFound
+from .types.badges import Badges
 from .types.games import LastPlayedGames, LastPlayedGame, OwnedGames
 from .types.user import UserModel, UsersModel, FriendModel
 
@@ -9,7 +10,7 @@ from .types.user import UserModel, UsersModel, FriendModel
 class UsersClient:
     """Steam Users API client"""
 
-    def __init__(self, client: Client):
+    def __init__(self, client: RequestsClient):
         """Constructor for Steam Users class"""
         self.__client = client
 
@@ -46,7 +47,7 @@ class UsersClient:
 
 
 class User(UserModel, UsersClient):
-    def __init__(self, client: Client, **data: Any):
+    def __init__(self, client: RequestsClient, **data: Any):
         UserModel.__init__(self, **data)
         UsersClient.__init__(self, client)
         self.__client = client
@@ -62,7 +63,7 @@ class User(UserModel, UsersClient):
         self.friends = transform_friends
         return self.friends
 
-    async def get_user_recently_played_games(self) -> list[LastPlayedGame]:
+    async def get_last_played_games(self) -> list[LastPlayedGame]:
         """Gets recently played games
         """
         games = []
@@ -105,22 +106,24 @@ class User(UserModel, UsersClient):
         self.player_lvl = response["response"]['player_level']
         return response["response"]
 
-    async def get_user_badges(self) -> dict:
+    async def get_user_badges(self) -> Badges:
         """Gets user async_steam badges
         """
         response = await self.__client.request("get", "/IPlayerService/GetBadges/v1/",
                                                params={"steamid": self.steam_id})
-        return response["response"]
+        badges = Badges.model_validate(response["response"])
+        self.user_badges = badges
+        return badges
 
-    async def get_community_badge_progress(self, badge_id: int or str) -> dict:
-        """Gets user community badge progress
-
-        Args:
-            badge_id (int): Badge ID
-        """
-        response = await self.__client.request("get", "/IPlayerService/GetCommunityBadgeProgress/v1",
-                                               params={"steamid": self.steam_id, "badgeid": badge_id}, )
-        return response["response"]
+    # async def get_community_badge_progress(self, badge_id: int or str) -> dict:
+    #     """Gets user community badge progress
+    #
+    #     Args:
+    #         badge_id (int): Badge ID
+    #     """
+    #     response = await self.__client.request("get", "/IPlayerService/GetCommunityBadgeProgress/v1",
+    #                                            params={"steamid": self.steam_id, "badgeid": badge_id}, )
+    #     return response["response"]
 
     async def get_account_public_info(self) -> dict:
         """Gets account public info

@@ -1,5 +1,5 @@
 from .users import UsersClient, User
-from .client import Client
+from .requests_client import RequestsClient
 from .apps import Apps
 
 
@@ -10,7 +10,7 @@ class Steam:
         """Constructor for Steam API client"""
         if headers is None:
             headers = {}
-        client = Client(key, headers=headers)
+        client = RequestsClient(key, headers=headers)
         self.__users = UsersClient(client)
         self.__apps = Apps(client)
 

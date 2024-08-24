@@ -6,7 +6,7 @@ from .constants import API_BASE_URL
 from .utils import build_url_with_params, merge_dict, retry, validator, create_session
 
 
-class Client:
+class RequestsClient:
     """Steams API HTTP client"""
 
     def __init__(self, key: str, headers: dict = None):

@@ -2,6 +2,7 @@ from typing import Optional, Any
 
 from pydantic import BaseModel, model_validator
 
+from aiosteam.types.badges import Badges
 from aiosteam.types.games import LastPlayedGame, OwnedGames, OwnedGame
 
 
@@ -48,6 +49,7 @@ class UserModel(BaseModel):
     friends: Optional[list[FriendModel]]
     last_played_games: Optional[dict[int, LastPlayedGame]]
     owned_games: Optional[dict[int, OwnedGame]]
+    user_badges: Optional[Badges]
 
     @model_validator(mode='before')
     def create_avatar_field(cls, inp: dict):

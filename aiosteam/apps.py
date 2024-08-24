@@ -2,7 +2,7 @@ import json
 
 import typing
 from aiohttp import ClientSession
-from .client import Client
+from .requests_client import RequestsClient
 from .utils import build_url_with_params_for_search, validator, create_session
 from bs4 import BeautifulSoup
 from .constants import API_APP_DETAILS_URL, API_APP_SEARCH_URL
@@ -11,7 +11,7 @@ from .constants import API_APP_DETAILS_URL, API_APP_SEARCH_URL
 class Apps:
     """Steam Apps API client"""
 
-    def __init__(self, client: Client):
+    def __init__(self, client: RequestsClient):
         """Constructor for Steam Apps class"""
         self.__client = client
         self.__search_url = API_APP_SEARCH_URL
