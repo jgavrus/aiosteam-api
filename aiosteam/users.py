@@ -3,8 +3,8 @@ from typing import Optional, Any
 from .requests_client import RequestsClient
 from .exceptions.api_errors import NotFound
 from .types.badges import Badges
-from .types.games import LastPlayedGames, LastPlayedGame, OwnedGames
-from .types.user import UserModel, UsersModel, FriendModel
+from .types.games import LastPlayedGames, LastPlayedGame, OwnedGames, OwnedGame
+from .types.user import UserModel, UsersModel
 
 
 class UsersClient:
@@ -52,16 +52,15 @@ class User(UserModel, UsersClient):
         UsersClient.__init__(self, client)
         self.__client = client
 
-    async def get_user_friends_list(self) -> list[FriendModel]:
+    async def get_user_friends_list(self) -> list['User']:
         """
         Gets friend list of a user
         """
 
         friends_list_response = await self.__client.request("get", "/ISteamUser/GetFriendList/v1/",
                                                             params={"steamid": self.steam_id})
-        transform_friends = await self._transform_friends(friends_list_response["friendslist"])
-        self.friends = transform_friends
-        return self.friends
+        self.friends = await self._transform_friends(friends_list_response["friendslist"])
+        return self.friends  # noqa this is realy return User object
 
     async def get_last_played_games(self) -> list[LastPlayedGame]:
         """Gets recently played games
@@ -74,17 +73,17 @@ class User(UserModel, UsersClient):
             self.last_played_games = games
         return games
 
-    async def get_owned_games(self, include_appinfo=True, includ_free_games=True) -> dict:
+    async def get_owned_games(self, include_appinfo=True, include_free_games=True) -> dict[int, OwnedGame]:
         """Gets all owned games of a user by async_steam id
 
         Args:
             include_appinfo (bool, optional): Includes app/game info. Defaults to True.
-            includ_free_games (bool, optional): Includes free games. Defaults to True.
+            include_free_games (bool, optional): Includes free games. Defaults to True.
         """
         params = {
             "steamid": self.steam_id,
             "include_appinfo": include_appinfo,
-            "include_played_free_games": includ_free_games,
+            "include_played_free_games": include_free_games,
         }
         response = await self.__client.request("get", "/IPlayerService/GetOwnedGames/v1/", params=params)
         owned = OwnedGames.model_validate(response["response"]['games']).games
@@ -140,7 +139,7 @@ class User(UserModel, UsersClient):
                                                params={"steamids": self.steam_id})
         return response
 
-    async def _transform_friends(self, friends_list: dict) -> list[Optional[FriendModel]]:
+    async def _transform_friends(self, friends_list: dict) -> list[Optional['User']]:
         friend_steam_ids = {friend["steamid"]: friend for friend in friends_list["friends"]}
         friends = await self.get_user_details(",".join(friend_steam_ids.keys()), False)
         result = []
@@ -148,8 +147,10 @@ class User(UserModel, UsersClient):
         for f in friends:
             if str(f.steam_id) in set(friend_steam_ids.keys()):
                 friend = friend_steam_ids[str(f.steam_id)]
-                result.append(
-                    FriendModel(**dict(f), relationship=friend["relationship"], friend_since=friend["friend_since"]))
+                f.relationship = friend["relationship"]
+                f.friend_since = friend["friend_since"]
+                client = self.__client
+                result.append(User(client=client, **dict(f)))
 
         return result
 

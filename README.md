@@ -1,5 +1,3 @@
-# Framework still in development
-
 # Get Started
 
 ## Installation
@@ -10,84 +8,97 @@
 
 [Steam API Web "STEAM_API_KEY"](https://steamcommunity.com/dev/api"STEAM_API_KEY")
 
-Follow instructions to get API "STEAM_API_KEY"'
+Follow instructions to get API "STEAM_API_KEY"
 
 # Basic Usage
 
 ### Searching for a user
 
 ```python
+import asyncio
 from aiosteam import Steam
 
 steam = Steam("STEAM_API_KEY")
 
-steam.users.search_user("jeygavrus")
-```
 
-Response
+async def some_async_foo():
+  user = await steam.search_user("jeygavrus")  # also you can use steam user id for searching
+
+
+asyncio.run(some_async_foo())
+```
+it will return User - a pydantic model with additional methods for getting more detail info.   
+if you want reformat model to dict use ```user.model_dump()``` method.  
+Or ```user.model_dump_json()``` for getting json string.  
+
+JSON Response example:
 
 ```json
 {
-  "player": {
-    "steamid": "76561198144619553",
-    "communityvisibilitystate": 3,
-    "profilestate": 1,
-    "personaname": "stef1k",
-    "profileurl": "https://steamcommunity.com/id/jeygavrus/",
-    "avatar": "https://avatars.steamstatic.com/ba6060e3847fb5571a4c28f0994884d21fbfb1a2.jpg",
-    "avatarmedium": "https://avatars.steamstatic.com/ba6060e3847fb5571a4c28f0994884d21fbfb1a2_medium.jpg",
-    "avatarfull": "https://avatars.steamstatic.com/ba6060e3847fb5571a4c28f0994884d21fbfb1a2_full.jpg",
-    "avatarhash": "ba6060e3847fb5571a4c28f0994884d21fbfb1a2",
-    "lastlogoff": 1704764074,
-    "personastate": 1,
-    "realname": "Євгеній",
-    "primaryclanid": "103582791429521408",
-    "timecreated": 1405203743,
-    "personastateflags": 0,
-    "loccountrycode": "UA"
-  }
+  "steam_id" : 76561198144619553,
+  "player_lvl" : null,
+  "community_visibility_state" : 3,
+  "profile_state" : 1,
+  "persona_name" : "stef1k",
+  "profile_url" : "https://steamcommunity.com/id/jeygavrus/",
+  "avatar" : {
+    "avatar" : "https://avatars.steamstatic.com/ba6060e3847fb5571a4c28f0994884d21fbfb1a2.jpg",
+    "avatar_medium" : "https://avatars.steamstatic.com/ba6060e3847fb5571a4c28f0994884d21fbfb1a2_medium.jpg",
+    "avatar_full" : "https://avatars.steamstatic.com/ba6060e3847fb5571a4c28f0994884d21fbfb1a2_full.jpg",
+    "avatar_hash" : "ba6060e3847fb5571a4c28f0994884d21fbfb1a2"
+  },
+  "last_logoff" : 1724462578,
+  "persona_state" : 0,
+  "real_name" : "Євгеній",
+  "primary_clan_id" : 103582791429521408,
+  "time_created" : 1405203743,
+  "persona_state_flags" : 0,
+  "loc_country_code" : "UA",
+  "friends" : null,
+  "last_played_games" : null,
+  "owned_games" : null,
+  "user_badges" : null
 }
 ```
 
-### Getting User details by steam id
+### friends, last_played_games, last_played_games, user_badges
+By default, these fields are empty. For getting this info - you should use get_* method
 
+Example:
 ```python
 import asyncio
-
 from aiosteam import Steam
 
 steam = Steam("STEAM_API_KEY")
 
-# arguments: steam_id
-user = asyncio.run(steam.users.get_user_details("76561198144619553"))
+
+async def some_async_foo():
+  user = await steam.search_user("jeygavrus")  # also you can use steam user id for searching
+  print(user.owned_games) # None
+  games = await user.get_owned_games()
+  print(games) # dict {int_id : OwnedGame}
+  print(user.owned_games) # dict {int_id : OwnedGame}
+
+
+asyncio.run(some_async_foo())
 ```
 
-Response
+Owned games dict example
 
 ```json
 {
-  "player": {
-    "steamid": "76561198144619553",
-    "communityvisibilitystate": 3,
-    "profilestate": 1,
-    "personaname": "stef1k",
-    "profileurl": "https://steamcommunity.com/id/jeygavrus/",
-    "avatar": "https://avatars.steamstatic.com/ba6060e3847fb5571a4c28f0994884d21fbfb1a2.jpg",
-    "avatarmedium": "https://avatars.steamstatic.com/ba6060e3847fb5571a4c28f0994884d21fbfb1a2_medium.jpg",
-    "avatarfull": "https://avatars.steamstatic.com/ba6060e3847fb5571a4c28f0994884d21fbfb1a2_full.jpg",
-    "avatarhash": "ba6060e3847fb5571a4c28f0994884d21fbfb1a2",
-    "lastlogoff": 1704764074,
-    "personastate": 1,
-    "realname": "Євгеній",
-    "primaryclanid": "103582791429521408",
-    "timecreated": 1405203743,
-    "personastateflags": 0,
-    "loccountrycode": "UA"
+  20920: {
+    "app_id": 20920,
+    "name": "The Witcher 2: Assassins of Kings Enhanced Edition",
+    "playtime_two_weeks": 1015, // all time parameters in minutes
+    "playtime_forever": 1994,
+    "img_icon_url": "62dd5c627664df1bcabc47727c7dcd7ccab353e9"
   }
 }
 ```
 
 ### Getting Friends List
+the same principe as with games
 
 ```python
 import asyncio
@@ -96,153 +107,50 @@ from aiosteam import Steam
 
 steam = Steam("STEAM_API_KEY")
 
-# arguments: steam_id
-user = asyncio.run(steam.users.get_user_friends_list("76561198995017863"))
+
+async def some_async_foo():
+    user = await steam.search_user("jeygavrus")  # also you can use steam user id for searching
+    user_friends = await user.get_user_friends_list()
+    print(user_friends)  # list[User]
+    print(user.friends)
+  
+
+asyncio.run(some_async_foo())
 ```
 
 Response
 
 ```json
-{
-  "friends": [
-    {
-      "steamid": "76561198164668273",
-      "communityvisibilitystate": 3,
-      "profilestate": 1,
-      "personaname": "ProToType",
-      "profileurl": "https://steamcommunity.com/id/bruuitssam/",
-      "avatar": "https://avatars.akamai.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb.jpg",
-      "avatarmedium": "https://avatars.akamai.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_medium.jpg",
-      "avatarfull": "https://avatars.akamai.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg",
-      "avatarhash": "fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb",
-      "lastlogoff": 1659791200,
-      "personastate": 3,
-      "realname": "Samuel chance",
-      "primaryclanid": "103582791429521408",
-      "timecreated": 1416698360,
-      "personastateflags": 0,
-      "loccountrycode": "US",
-      "relationship": "friend",
-      "friend_since": 1634692088
+ [
+  {
+    "steam_id": 123456789,
+    "player_lvl": null,
+    "community_visibility_state": 3,
+    "profile_state": 1,
+    "persona_name": "Зеновій Гучок",
+    "profile_url": "https://steamcommunity.com/id/123456789/",
+    "avatar": {
+      "avatar": "https://avatars.steamstatic.com/xxxxx.jpg",
+      "avatar_medium": "https://avatars.steamstatic.com/xxxxx_medium.jpg",
+      "avatar_full": "https://avatars.steamstatic.com/xxxxx_full.jpg",
+      "avatar_hash": "68839dbe297c62958aa507d2a0a87052b209540e"
     },
-    {
-      "steamid": "76561198040366189",
-      "communityvisibilitystate": 3,
-      "profilestate": 1,
-      "personaname": "\u2654 Regular Tetragon",
-      "commentpermission": 1,
-      "profileurl": "https://steamcommunity.com/id/regulartetragon/",
-      "avatar": "https://avatars.akamai.steamstatic.com/85ee384bec86399cc79728cbde046516fa704b23.jpg",
-      "avatarmedium": "https://avatars.akamai.steamstatic.com/85ee384bec86399cc79728cbde046516fa704b23_medium.jpg",
-      "avatarfull": "https://avatars.akamai.steamstatic.com/85ee384bec86399cc79728cbde046516fa704b23_full.jpg",
-      "avatarhash": "85ee384bec86399cc79728cbde046516fa704b23",
-      "lastlogoff": 1659834670,
-      "personastate": 0,
-      "realname": "Vincent Mattingly",
-      "primaryclanid": "103582791435763797",
-      "timecreated": 1302294837,
-      "personastateflags": 0,
-      "relationship": "friend",
-      "friend_since": 1649989273
-    },
-    {
-      "steamid": "76561198030124562",
-      "communityvisibilitystate": 3,
-      "profilestate": 1,
-      "personaname": "Robz",
-      "profileurl": "https://steamcommunity.com/profiles/76561198030124562/",
-      "avatar": "https://avatars.akamai.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb.jpg",
-      "avatarmedium": "https://avatars.akamai.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_medium.jpg",
-      "avatarfull": "https://avatars.akamai.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg",
-      "avatarhash": "fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb",
-      "lastlogoff": 1659320144,
-      "personastate": 1,
-      "primaryclanid": "103582791429521408",
-      "timecreated": 1283739538,
-      "personastateflags": 0,
-      "relationship": "friend",
-      "friend_since": 1634692171
-    }
-  ]
-}
-```
+    "last_logoff": 1724503422,
+    "persona_state": 0,
+    "real_name": "Denys",
+    "primary_clan_id": 123456,
+    "time_created": 1423770633,
+    "persona_state_flags": 0,
+    "loc_country_code": "UA",
+    "friends": null,
+    "last_played_games": null,
+    "owned_games": null,
+    "user_badges": null,
+    "relationship": "friend",
+    "friend_since": 1691321801
+  }
+]
 
-### Getting Users Recently Played Games
-
-```python
-import asyncio
-
-from aiosteam import Steam
-
-steam = Steam("STEAM_API_KEY")
-
-# arguments: steam_id
-user = asyncio.run(steam.users.get_user_recently_played_games("76561198144619553"))
-```
-
-### Getting User Owned Games
-
-```python
-import asyncio
-
-from aiosteam import Steam
-
-steam = Steam("STEAM_API_KEY")
-
-# arguments: steam_id
-user = asyncio.run(steam.users.get_owned_games("76561198144619553"))
-```
-
-### Getting User Steam Level
-
-```python
-import asyncio
-
-from aiosteam import Steam
-
-steam = Steam("STEAM_API_KEY")
-
-# arguments: steam_id
-user = asyncio.run(steam.users.get_user_steam_level("76561198144619553"))
-```
-
-### Getting User Badges
-
-```python
-import asyncio
-
-from aiosteam import Steam
-
-steam = Steam("STEAM_API_KEY")
-
-# arguments: steam_id
-user = asyncio.run(steam.users.get_user_badges("76561198144619553"))
-```
-
-### Getting Community Badge Progress
-
-```python
-import asyncio
-
-from aiosteam import Steam
-
-steam = Steam("STEAM_API_KEY")
-
-# arguments: steam_id, badge_id
-user = asyncio.run(steam.users.get_community_badge_progress("<steam_id>", "<badge_id>"))
-```
-
-### Getting User Public Account
-
-```python
-import asyncio
-
-from aiosteam import Steam
-
-steam = Steam("STEAM_API_KEY")
-
-# arguments: steam_id
-user = asyncio.run(steam.users.get_account_public_info("<steam_id>"))
 ```
 
 ### Searching for Games
