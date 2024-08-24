@@ -5,7 +5,7 @@ with open("README.md") as fp:
 
 setup(
     name="aiosteam-api",
-    version="1.0.1",
+    version="1.1.0",
     description="Async Python Client wrapper for Steam API",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -20,7 +20,7 @@ setup(
     author_email="jeygavrus@gmail.com",
     url="https://github.com/jgavrus/aiosteam-api",
     packages=find_packages(),
-    install_requires=["beautifulsoup4", "aiohttp"],
+    install_requires=["beautifulsoup4", "aiohttp", "pydantic"],
     license="MIT",
     # https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
@@ -29,7 +29,6 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python",
