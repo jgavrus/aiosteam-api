@@ -1,4 +1,3 @@
-import json
 from urllib.parse import urlencode
 
 import aiohttp
@@ -90,9 +89,4 @@ def retry(times, exceptions):
     return decorator
 
 
-def create_session(fn):
-    async def wrapper(*args, **kwargs):
-        async with aiohttp.ClientSession() as session:
-            return await fn(*args, session=session, **kwargs)
 
-    return wrapper
