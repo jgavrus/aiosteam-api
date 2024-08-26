@@ -73,7 +73,7 @@ class RequestsClient:
         response = await session.request('get', self.app_details_url,
                                          params={"appids": app_id, "cc": country, "filters": filters})
         dict_response = await response.json()
-        return dict_response[str(app_id)]['data']
+        return dict_response.get(str(app_id), {}).get('data', {})
 
     @retry(times=3, exceptions=(ValueError, TypeError))
     @create_session
@@ -102,7 +102,7 @@ class RequestsClient:
             session: aiohttp.ClientSession, optional added unfathomably from decorator
 
         """
-        url = self.search_url(term, country)
+        url = self.create_search_url(term, country)
         result = await session.request("get", url)
         html = await validator(result)
         soup = BeautifulSoup(html, features="html.parser")

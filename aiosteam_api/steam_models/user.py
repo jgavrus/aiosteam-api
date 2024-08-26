@@ -65,9 +65,9 @@ class User(BaseModel):
         search_response = await client.request("get", "/ISteamUser/ResolveVanityURL/v1/",
                                                params={"vanityurl": search})
 
-        if search_response["response"]["success"] != 1:
-            return search_response["response"]["message"]
-        steam_id = search_response["response"]["steamid"]
+        if search_response("response")("success") != 1:
+            return search_response.get("response", {}).get("message")
+        steam_id = search_response.get("response", {}).get("steamid")
         return await User.get_user_details(steam_id, client)
 
     @staticmethod
@@ -82,13 +82,13 @@ class User(BaseModel):
         """
         user_response = await client.request("get", "/ISteamUser/GetPlayerSummaries/v2/",
                                              params={"steamids": steam_id})
-        if not user_response["response"]["players"]:
+        if not user_response.get("response", {})["players"]:
             raise NotFound(f'{steam_id} is not found')
         if single:
-            return User(client=client, **user_response["response"]["players"][0])
+            return User(client=client, **user_response.get("response", {}).get("players", [None])[0])
         else:
             users = []
-            for player in user_response["response"]["players"]:
+            for player in user_response.get("response", {}).get("players", []):
                 users.append(User(client=client, **player))
             return users
 
@@ -119,8 +119,8 @@ class User(BaseModel):
         games = {}
         response = await self.client.request("get", "/IPlayerService/GetRecentlyPlayedGames/v1/",
                                              params={"steamid": self.steam_id})
-        if response["response"].get('total_count'):
-            for game in response["response"]["games"]:
+        if response.get("response", {}).get('total_count'):
+            for game in response.get("response", {}).games("games", []):
                 game.update({"client": self.client, "from_user_id": self.steam_id})
                 game_object = Game.model_validate(game)
                 games[game_object.app_id] = game_object
@@ -141,7 +141,7 @@ class User(BaseModel):
         }
         response = await self.client.request("get", "/IPlayerService/GetOwnedGames/v1/", params=params)
         games = {}
-        for game in response["response"]["games"]:
+        for game in response.get("response", {}).games("games", []):
             game.update({"client": self.client, "from_user_id": self.steam_id})
             owned = Game.model_validate(game)
             games[owned.app_id] = owned
@@ -160,15 +160,15 @@ class User(BaseModel):
         """
         response = await self.client.request("get", "/IPlayerService/GetSteamLevel/v1/",
                                              params={"steamid": self.steam_id})
-        self.player_lvl = response["response"]['player_level']
-        return response["response"]
+        self.player_lvl = response.get("response", {}).get('player_level', 0)
+        return response.get("response", {})
 
     async def get_user_badges(self) -> Badges:
         """Gets user async_steam badges
         """
         response = await self.client.request("get", "/IPlayerService/GetBadges/v1/",
                                              params={"steamid": self.steam_id})
-        badges = Badges.model_validate(response["response"])
+        badges = Badges.model_validate(response.get("response", {}))
         self.user_badges = badges
         return badges
 
@@ -180,7 +180,7 @@ class User(BaseModel):
     #     """
     #     response = await self.client.request("get", "/IPlayerService/GetCommunityBadgeProgress/v1",
     #                                            params={"steamid": self.steam_id, "badgeid": badge_id}, )
-    #     return response["response"]
+    #     return response.get("response", {})
 
     async def get_account_public_info(self) -> dict:
         """Gets account public info"""
@@ -213,5 +213,6 @@ class User(BaseModel):
         Args:
             vanity (str): Vanity URL
         """
-        response = await self.client.request("get", "/ISteamUser/ResolveVanityURL/v1", params={"vanityurl": vanity})
-        return response["response"]
+        response = await self.client.request("get", "/ISteamUser/ResolveVanityURL/v1",
+                                             params={"vanityurl": vanity})
+        return response.get("response", {})
