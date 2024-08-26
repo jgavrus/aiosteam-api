@@ -65,7 +65,7 @@ class User(BaseModel):
         search_response = await client.request("get", "/ISteamUser/ResolveVanityURL/v1/",
                                                params={"vanityurl": search})
 
-        if search_response("response").get("success") != 1:
+        if search_response.get("response", {}).get("success") != 1:
             return search_response.get("response", {}).get("message")
         steam_id = search_response.get("response", {}).get("steamid")
         return await User.get_user_details(steam_id, client)
