@@ -4,8 +4,8 @@ with open("README.md") as fp:
     long_description = fp.read()
 
 setup(
-    name="aiosteam-api",
-    version="1.1.0",
+    name="aiosteam_api",
+    version="1.1.1",
     description="Async Python Client wrapper for Steam API",
     long_description=long_description,
     long_description_content_type="text/markdown",

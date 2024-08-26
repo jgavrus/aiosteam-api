@@ -2,7 +2,7 @@ from typing import Optional
 
 from pydantic import BaseModel, model_validator, ConfigDict
 
-from aiosteam.clients.requests_client import RequestsClient
+from aiosteam_api.clients.requests_client import RequestsClient
 
 
 class Game(BaseModel):

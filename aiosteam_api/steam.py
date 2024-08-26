@@ -1,5 +1,5 @@
-from aiosteam.clients.requests_client import RequestsClient
-from aiosteam.steam_models import User
+from aiosteam_api.clients.requests_client import RequestsClient
+from aiosteam_api.steam_models import User
 
 
 class Steam:

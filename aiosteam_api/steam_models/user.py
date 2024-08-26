@@ -2,10 +2,10 @@ from typing import Optional
 
 from pydantic import BaseModel, model_validator, ConfigDict
 
-from aiosteam.clients.requests_client import RequestsClient
-from aiosteam.exceptions.api_errors import NotFound
-from aiosteam.steam_models.badges import Badges
-from aiosteam.steam_models.games import Game
+from aiosteam_api.clients.requests_client import RequestsClient
+from aiosteam_api.exceptions.api_errors import NotFound
+from aiosteam_api.steam_models.badges import Badges
+from aiosteam_api.steam_models.games import Game
 
 
 class UserAvatarModel(BaseModel):
@@ -60,7 +60,7 @@ class User(BaseModel):
 
         Args:
             search (str): steam user. For example 'the12thchairman'
-            client (aiosteam.Client): aiosteam.Client
+            client (aiosteam_api.Client): aiosteam_api.Client
         """
         search_response = await client.request("get", "/ISteamUser/ResolveVanityURL/v1/",
                                                params={"vanityurl": search})
@@ -76,7 +76,7 @@ class User(BaseModel):
 
         Args:
             steam_id (str or int): Steam 64 ID
-            client (aiosteam.Client): aiosteam.Client
+            client (aiosteam_api.Client): aiosteam_api.Client
             single (bool, optional): Gets one player. Defaults to True. When false, steam_id can be a string of steamids and delimited by a ','
 
         """

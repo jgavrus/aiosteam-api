@@ -18,13 +18,13 @@ Follow instructions to get API "STEAM_API_KEY"
 
 ```python
 import asyncio
-from aiosteam import Steam
+from aiosteam_api import Steam
 
 steam = Steam("STEAM_API_KEY")
 
 
 async def some_async_foo():
-    user = await steam.search_user("jeygavrus")  # also you can use steam user id for searching
+  user = await steam.search_user("jeygavrus")  # also you can use steam user id for searching
 
 
 asyncio.run(some_async_foo())
@@ -72,17 +72,17 @@ Example:
 
 ```python
 import asyncio
-from aiosteam import Steam
+from aiosteam_api import Steam
 
 steam = Steam("STEAM_API_KEY")
 
 
 async def some_async_foo():
-    user = await steam.search_user("jeygavrus")  # also you can use steam user id for searching
-    print(user.owned_games)  # None
-    games = await user.get_owned_games()
-    print(games)  # dict {int_id : Game}
-    print(user.owned_games)  # dict {int_id : Game}
+  user = await steam.search_user("jeygavrus")  # also you can use steam user id for searching
+  print(user.owned_games)  # None
+  games = await user.get_owned_games()
+  print(games)  # dict {int_id : Game}
+  print(user.owned_games)  # dict {int_id : Game}
 
 
 asyncio.run(some_async_foo())
@@ -110,16 +110,16 @@ the same principe as with games
 ```python
 import asyncio
 
-from aiosteam import Steam
+from aiosteam_api import Steam
 
 steam = Steam("STEAM_API_KEY")
 
 
 async def some_async_foo():
-    user = await steam.search_user("jeygavrus")  # also you can use steam user id for searching
-    user_friends = await user.get_user_friends_list()
-    print(user_friends)  # list[User]
-    print(user.friends)
+  user = await steam.search_user("jeygavrus")  # also you can use steam user id for searching
+  user_friends = await user.get_user_friends_list()
+  print(user_friends)  # list[User]
+  print(user.friends)
 
 
 asyncio.run(some_async_foo())
@@ -167,7 +167,7 @@ Response
 ```python
 import asyncio
 
-from aiosteam import Steam
+from aiosteam_api import Steam
 
 steam = Steam("STEAM_API_KEY")
 
@@ -255,7 +255,7 @@ Response
 ```python
 import asyncio
 
-from aiosteam import Steam
+from aiosteam_api import Steam
 
 terraria_app_id = 105600
 steam = Steam("STEAM_API_KEY")
@@ -310,7 +310,7 @@ user = asyncio.run(steam.apps.get_app_details(terraria_app_id))
 ```python
 import asyncio
 
-from aiosteam import Steam
+from aiosteam_api import Steam
 
 steam = Steam("STEAM_API_KEY")
 
@@ -323,7 +323,7 @@ user = asyncio.run(steam.apps.get_user_stats("<steam_id>", "<app_id>"))
 ```python
 import asyncio
 
-from aiosteam import Steam
+from aiosteam_api import Steam
 
 steam = Steam("STEAM_API_KEY")
 
@@ -336,7 +336,7 @@ user = asyncio.run(steam.apps.get_user_achievements("<steam_id>", "<app_id>"))
 ```python
 import asyncio
 
-from aiosteam import Steam
+from aiosteam_api import Steam
 
 steam = Steam("STEAM_API_KEY")
 
