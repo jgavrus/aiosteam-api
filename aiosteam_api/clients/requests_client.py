@@ -78,7 +78,7 @@ class RequestsClient:
     @retry(times=3, exceptions=(ValueError, TypeError))
     @create_session
     async def request(self, method: str, url: str, params=None, headers=None, session: ClientSession = None,
-                      timeout: int = 3, **kwargs) -> str or dict:
+                      timeout: int = 3, **kwargs) -> str | dict:
 
         if headers is None:
             headers = {}

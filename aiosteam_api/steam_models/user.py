@@ -82,7 +82,7 @@ class User(BaseModel):
         """
         user_response = await client.request("get", "/ISteamUser/GetPlayerSummaries/v2/",
                                              params={"steamids": steam_id})
-        if not user_response.get("response", {})["players"]:
+        if not user_response.get("response", {}).get("players"):
             raise NotFound(f'{steam_id} is not found')
         if single:
             return User(client=client, **user_response.get("response", {}).get("players", [None])[0])
@@ -120,7 +120,7 @@ class User(BaseModel):
         response = await self.client.request("get", "/IPlayerService/GetRecentlyPlayedGames/v1/",
                                              params={"steamid": self.steam_id})
         if response.get("response", {}).get('total_count'):
-            for game in response.get("response", {}).games("games", []):
+            for game in response.get("response", {}).get("games", []):
                 game.update({"client": self.client, "from_user_id": self.steam_id})
                 game_object = Game.model_validate(game)
                 games[game_object.app_id] = game_object
@@ -141,7 +141,7 @@ class User(BaseModel):
         }
         response = await self.client.request("get", "/IPlayerService/GetOwnedGames/v1/", params=params)
         games = {}
-        for game in response.get("response", {}).games("games", []):
+        for game in response.get("response", {}).get("games", []):
             game.update({"client": self.client, "from_user_id": self.steam_id})
             owned = Game.model_validate(game)
             games[owned.app_id] = owned

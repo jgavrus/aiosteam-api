@@ -77,12 +77,14 @@ def retry(times, exceptions):
 
     def decorator(func):
         async def new_fn(*args, **kwargs):
+            last_exception = None
             for attempt in range(times):
                 try:
                     return await func(*args, **kwargs)
-                except exceptions:
+                except exceptions as exc:
+                    last_exception = exc
                     print(f'Exception thrown when attempting to run {func.__name__}, attempt {attempt + 1} of {times}')
-            return func(*args, **kwargs)
+            raise last_exception
 
         return new_fn
 

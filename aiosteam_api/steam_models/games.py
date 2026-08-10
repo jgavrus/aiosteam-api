@@ -1,3 +1,4 @@
+import re
 from typing import Optional
 
 from pydantic import BaseModel, model_validator, ConfigDict
@@ -40,17 +41,33 @@ class Game(BaseModel):
         return inp
 
     @staticmethod
-    def parse_supported_languages(text) -> dict[str, str]:
-        text = text.strip('languages with full audio support')
-        text = text.split(', ')
+    def parse_supported_languages(text: Optional[str]) -> dict[str, str]:
+        """Parses the store's supported_languages string into {language: 'full' | 'text'}
+
+        Steam returns something like
+        "English<strong>*</strong>, French, German<br><strong>*</strong>languages with full audio support",
+        where the asterisk marks full audio support and everything after the <br> is a footnote.
+        """
+        if not text:
+            return {}
+        languages = re.split(r'<br\s*/?>', text)[0]
         result = {}
-        for row in text:
-            if len(row.split('<')) >= 2:
-                name = row.split('<')[0]
-                result[name] = 'full'
-            else:
-                result[row] = 'text'
+        for row in languages.split(', '):
+            name = row.split('<')[0].strip()
+            if not name:
+                continue
+            result[name] = 'full' if '<' in row else 'text'
         return result
+
+    @staticmethod
+    def parse_required_age(value) -> Optional[int]:
+        """The store returns required_age as an int, as "0", or as "18+" depending on the app"""
+        if value is None or isinstance(value, bool):
+            return None
+        if isinstance(value, int):
+            return value
+        age = re.search(r'\d+', str(value))
+        return int(age.group()) if age else None
 
     async def get_user_stats(self) -> dict:
         """Obtains a user's stats for a specific app, includes only completed achievements
@@ -70,7 +87,7 @@ class Game(BaseModel):
 
     async def get_info_from_shop(self) -> 'Game':
         game = await self.client.get_app_details(app_id=self.app_id)
-        self.required_age = int(game.get('required_age'))
+        self.required_age = self.parse_required_age(game.get('required_age'))
         self.is_free = game.get('is_free')
         self.detailed_description = game.get('detailed_description')
         self.about_the_game = game.get('about_the_game')
