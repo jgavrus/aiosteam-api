@@ -162,23 +162,47 @@ Response
 
 ```
 
-### Getting everything at once
+### Reusing one connection
 
-`get_all_info()` fills every lazy field of the user (level, badges, recently played, owned games, bans,
-friends) and returns the user itself.
+Every call opens its own HTTP session by default. Used as an async context manager, the client keeps a
+single session (and its connection pool) alive instead, which matters as soon as you fetch a friends list
+or a whole library:
 
 ```python
 import asyncio
 
 from aiosteam_api import Steam
 
-steam = Steam("STEAM_API_KEY")
+
+async def some_async_foo():
+  async with Steam("STEAM_API_KEY") as steam:
+    user = await steam.search_user("jeygavrus")
+    await user.get_all_info()
+
+
+asyncio.run(some_async_foo())
+```
+
+`Steam()` also takes `timeout` (seconds per request, default 10) and `max_concurrency` (how many requests
+may be in flight at once, default 8). Requests are retried three times with exponential backoff, and a
+429 waits for `Retry-After` when Steam sends it.
+
+### Getting everything at once
+
+`get_all_info()` fills every lazy field of the user (level, badges, recently played, owned games, bans,
+friends) and returns the user itself. The calls are issued concurrently.
+
+```python
+import asyncio
+
+from aiosteam_api import Steam
 
 
 async def some_async_foo():
-  user = await steam.search_user("jeygavrus")
-  await user.get_all_info()
-  print(user.player_lvl, user.user_badges, len(user.owned_games))
+  async with Steam("STEAM_API_KEY") as steam:
+    user = await steam.search_user("jeygavrus")
+    await user.get_all_info()
+    print(user.player_lvl, user.user_badges, len(user.owned_games))
 
 
 asyncio.run(some_async_foo())
@@ -186,6 +210,40 @@ asyncio.run(some_async_foo())
 
 Other `User` methods: `get_player_lvl()`, `get_user_badges()`, `get_last_played_games()`,
 `get_player_bans()`, `get_steamid(vanity)`.
+
+Friend lists longer than 100 are split into batches automatically, because Steam silently truncates
+bigger requests. Pass `enriched=False` to get Steam's raw ids and relationships without fetching the
+details of every friend:
+
+```python
+friends = await user.get_user_friends_list(enriched=False)
+# [{'steamid': '123...', 'relationship': 'friend', 'friend_since': 1691321801}, ...]
+```
+
+### Wishlist
+
+```python
+wishlist = await user.get_wishlist()  # dict {app_id: WishlistItem}
+item = wishlist[105600]
+print(item.priority, item.date_added)
+
+game = await item.get_game()  # one extra store request, gives a full Game
+```
+
+Steam's wishlist endpoint only returns app ids and when they were added, so a `WishlistItem` is not a
+`Game`. An empty dict means the wishlist is empty or the profile hides it.
+
+### Shared games (family library)
+
+This is an undocumented Steam endpoint and it does **not** accept the API key. `access_token` is a
+separate token you can read from `https://store.steampowered.com/pointssummary/ajaxgetasyncconfig`
+while logged in.
+
+```python
+shared = await user.get_shared_games("ACCESS_TOKEN")
+# games the user owns themselves are left out unless include_owned=True,
+# and family-excluded titles (MMO/MP, delisted) are filtered out
+```
 
 ### Game details from the store
 
@@ -196,15 +254,14 @@ import asyncio
 
 from aiosteam_api import Steam
 
-steam = Steam("STEAM_API_KEY")
-
 
 async def some_async_foo():
-  user = await steam.search_user("jeygavrus")
-  games = await user.get_owned_games()
-  game = games[105600]  # games are keyed by app_id
-  await game.get_info_from_shop()  # store info: descriptions, requirements, languages, dlc
-  print(game.short_description, game.supported_languages)
+  async with Steam("STEAM_API_KEY") as steam:
+    user = await steam.search_user("jeygavrus")
+    games = await user.get_owned_games()
+    game = games[105600]  # games are keyed by app_id
+    await game.get_info_from_shop()  # store info: descriptions, requirements, languages, dlc
+    print(game.short_description, game.supported_languages)
 
 
 asyncio.run(some_async_foo())
@@ -212,35 +269,24 @@ asyncio.run(some_async_foo())
 
 `get_info_from_shop()` fills `required_age`, `is_free`, `detailed_description`, `about_the_game`,
 `short_description`, `supported_languages`, `header_image`, `capsule_image`, `capsule_imagev5`,
-`pc_requirements`, `mac_requirements`, `linux_requirements` and `dlc` (a list of `Game`).
+`website`, `pc_requirements`, `mac_requirements`, `linux_requirements` and `dlc` (a list of `Game`,
+fetched concurrently).
 
-`supported_languages` is parsed into a dict, e.g.
-`{"English": "full", "French": "text"}` — `full` means full audio support.
+`supported_languages` is parsed into a dict, e.g. `{"English": "full", "French": "text"}` — `full` means
+full audio support.
 
 ### User stats and achievements for a game
 
 Both use the `from_user_id` the game was fetched with, so no steam id is needed.
 
 ```python
-import asyncio
-
-from aiosteam_api import Steam
-
-steam = Steam("STEAM_API_KEY")
-
-
-async def some_async_foo():
-  user = await steam.search_user("jeygavrus")
-  games = await user.get_owned_games()
-  game = games[105600]
-  print(await game.get_user_stats())
-  print(await game.get_user_achievements())
-
-
-asyncio.run(some_async_foo())
+game = (await user.get_owned_games())[105600]
+print(await game.get_user_stats())
+print(await game.get_user_achievements(language="uk"))  # defaults to "en"
 ```
 
-`game.get_all_info()` runs `get_info_from_shop()`, `get_user_achievements()` and `get_user_stats()` together.
+`game.get_all_info()` runs `get_info_from_shop()`, `get_user_achievements()` and `get_user_stats()`
+together.
 
 ### Searching for games / raw app details
 
@@ -274,6 +320,18 @@ details = asyncio.run(steam.client.get_app_details(105600))  # Terraria
 }
 ```
 
+Pass `fetch_discounts=True` to also open every result's store page (concurrently) and add
+`has_discount` and `discount` to each entry.
+
+### Workshop files
+
+```python
+details = await steam.get_published_file_details([published_file_id])
+```
+
+`aiosteam_api.steam_types` has the `PublishedFileQueryType` and `PublishedFileInfoMatchingFileType`
+enums that go with it.
+
 ### Getting user ban status
 
 ```python
@@ -281,12 +339,11 @@ import asyncio
 
 from aiosteam_api import Steam
 
-steam = Steam("STEAM_API_KEY")
-
 
 async def some_async_foo():
-  user = await steam.search_user("jeygavrus")
-  print(await user.get_player_bans())
+  async with Steam("STEAM_API_KEY") as steam:
+    user = await steam.search_user("jeygavrus")
+    print(await user.get_player_bans())
 
 
 asyncio.run(some_async_foo())
@@ -307,3 +364,28 @@ asyncio.run(some_async_foo())
   ]
 }
 ```
+
+# Errors
+
+Everything this library raises derives from `SteamAPIError`:
+
+| Exception | When |
+|---|---|
+| `NotFound` | the user or app does not exist, is private or is banned |
+| `InvalidKey` | Steam answered 401/403 — key missing, wrong, or without access |
+| `RateLimited` | Steam answered 429; carries `retry_after` when Steam sends the header |
+| `SteamAPIError` | any other API error; carries `status` |
+
+```python
+from aiosteam_api import NotFound, RateLimited, SteamAPIError
+```
+
+# Development
+
+```bash
+pip install -e .[test,style]
+pytest
+ruff check .
+```
+
+The test suite mocks Steam with `aioresponses`, so no API key is needed to run it.
