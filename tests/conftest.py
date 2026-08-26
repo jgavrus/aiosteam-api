@@ -24,9 +24,9 @@ APP_DETAILS = re.compile(r".*appdetails.*")
 APP_SEARCH = re.compile(r".*search/suggest.*")
 
 
-def player(steam_id: int, name: str = "stef1k") -> dict:
+def player(steam_id: int, name: str = "stef1k", **overrides) -> dict:
     """A GetPlayerSummaries entry, with Steam's own separator-less key names"""
-    return {
+    data = {
         "steamid": steam_id,
         "communityvisibilitystate": 3,
         "profilestate": 1,
@@ -44,6 +44,8 @@ def player(steam_id: int, name: str = "stef1k") -> dict:
         "personastateflags": 0,
         "loccountrycode": "UA",
     }
+    data.update(overrides)
+    return data
 
 
 def summaries(*steam_ids: int) -> dict:

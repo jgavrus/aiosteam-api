@@ -9,7 +9,8 @@ from bs4 import BeautifulSoup
 from aiosteam_api.constants import (API_BASE_URL, APP_DETAILS_URL, APP_SEARCH_URL, DEFAULT_MAX_CONCURRENCY,
                                     DEFAULT_RETRIES, DEFAULT_TIMEOUT)
 
-from .utils import build_url_with_params, merge_dict, retry, validator, build_url_with_params_for_search
+from .utils import (build_url_with_params, build_url_with_params_for_search, clean_dict, merge_dict, retry,
+                    validator)
 
 RETRYABLE = (aiohttp.ClientError, asyncio.TimeoutError, ValueError, TypeError)
 
@@ -127,8 +128,10 @@ class RequestsClient:
                     recommendations,
                     achievements,
         """
+        # clean_dict, because filters=None is a documented way to ask for the whole payload and aiohttp
+        # refuses to encode a None query value
         response = await self._send(session, 'get', self.app_details_url, timeout=self._timeout(),
-                                    params={"appids": app_id, "cc": country, "filters": filters})
+                                    params=clean_dict({"appids": app_id, "cc": country, "filters": filters}))
         if not isinstance(response, dict):
             return {}
         return response.get(str(app_id), {}).get('data', {})

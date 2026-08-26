@@ -260,3 +260,130 @@ def test_player_fixture_matches_the_model_fields():
     payload = player(STEAM_ID)
     for field in ("persona_name", "profile_url", "primary_clan_id", "loc_country_code"):
         assert field.replace("_", "") in payload
+
+
+async def test_in_game_fields_are_parsed_from_the_summary(client):
+    """Steam only sends these while the player is inside a game, and they used to be dropped"""
+    in_game = player(STEAM_ID, gameid="730", gameextrainfo="Counter-Strike 2",
+                     gameserverip="1.2.3.4:27015", gameserversteamid="90071992547409920",
+                     lobbysteamid="109775240000000000", locstatecode="14", loccityid=12345,
+                     commentpermission=1)
+
+    with aioresponses() as mocked:
+        mocked.get(SUMMARIES, payload={"response": {"players": [in_game]}})
+        user = await User.get_user_details(STEAM_ID, client)
+
+    assert user.game_id == 730
+    assert user.game_extra_info == "Counter-Strike 2"
+    assert user.game_server_ip == "1.2.3.4:27015"
+    assert user.game_server_steam_id == 90071992547409920
+    assert user.lobby_steam_id == 109775240000000000
+    assert user.loc_state_code == "14"
+    assert user.loc_city_id == 12345
+    assert user.comment_permission == 1
+    assert user.is_in_game
+
+
+async def test_a_player_outside_a_game_has_no_game_fields(client):
+    user = await make_user(client)
+
+    assert user.game_id is None
+    assert user.game_extra_info is None
+    assert not user.is_in_game
+
+
+async def test_get_player_bans_returns_a_parsed_record(client):
+    user = await make_user(client)
+
+    with aioresponses() as mocked:
+        mocked.get(PLAYER_BANS, payload={"players": [{
+            "SteamId": str(STEAM_ID), "CommunityBanned": False, "VACBanned": True, "NumberOfVACBans": 2,
+            "DaysSinceLastBan": 342, "NumberOfGameBans": 1, "EconomyBan": "none"}]})
+        bans = await user.get_player_bans()
+
+    assert bans.steam_id == STEAM_ID
+    assert bans.vac_banned is True
+    assert bans.number_of_vac_bans == 2
+    assert bans.number_of_game_bans == 1
+    assert bans.days_since_last_ban == 342
+    assert not bans.is_clean
+    assert user.bans is bans
+
+
+async def test_an_account_without_bans_is_clean(client):
+    user = await make_user(client)
+
+    with aioresponses() as mocked:
+        mocked.get(PLAYER_BANS, payload={"players": [{
+            "SteamId": str(STEAM_ID), "CommunityBanned": False, "VACBanned": False, "NumberOfVACBans": 0,
+            "DaysSinceLastBan": 0, "NumberOfGameBans": 0, "EconomyBan": "none"}]})
+        bans = await user.get_player_bans()
+
+    assert bans.is_clean
+
+
+async def test_bans_of_an_unknown_id_are_none(client):
+    user = await make_user(client)
+
+    with aioresponses() as mocked:
+        mocked.get(PLAYER_BANS, payload={"players": []})
+        assert await user.get_player_bans() is None
+
+
+async def test_get_user_badges_fills_the_level_it_already_carries(client):
+    user = await make_user(client)
+
+    with aioresponses() as mocked:
+        mocked.get(BADGES, payload=BADGES_PAYLOAD)
+        badges = await user.get_user_badges()
+
+    assert user.player_lvl == 5, "GetBadges answers with the level, so GetSteamLevel is a second request"
+    assert badges.xp_into_current_level == 10
+    assert badges.badges[0].badge_id == 1
+
+
+async def test_badges_of_a_profile_that_hides_them_do_not_raise(client):
+    user = await make_user(client)
+
+    with aioresponses() as mocked:
+        mocked.get(BADGES, payload={"response": {}})
+        badges = await user.get_user_badges()
+
+    assert badges.badges == []
+    assert badges.player_level is None
+    assert user.player_lvl is None
+
+
+async def test_game_badges_keep_the_app_they_belong_to(client):
+    user = await make_user(client)
+    payload = {"response": {"badges": [{"badgeid": 13, "level": 147, "completion_time": 1782653643,
+                                        "xp": 379, "scarcity": 13221412, "appid": 379430,
+                                        "communityitemid": "1234567", "border_color": 0}]}}
+
+    with aioresponses() as mocked:
+        mocked.get(BADGES, payload=payload)
+        badges = await user.get_user_badges()
+
+    assert badges.badges[0].app_id == 379430
+    assert badges.badges[0].community_item_id == 1234567
+    assert badges.badges[0].border_color == 0
+
+
+async def test_a_private_profile_is_parsed_without_the_fields_steam_leaves_out(client):
+    """Steam sends a private profile without timecreated, primaryclanid, realname or profilestate —
+    a friend list with one private profile in it used to fail the whole batch"""
+    private = {"steamid": str(STEAM_ID), "communityvisibilitystate": 1, "personaname": "hidden",
+               "profileurl": f"https://steamcommunity.com/profiles/{STEAM_ID}/", "avatar": "a.jpg",
+               "avatarmedium": "a_medium.jpg", "avatarfull": "a_full.jpg", "avatarhash": "deadbeef",
+               "personastate": 0}
+
+    with aioresponses() as mocked:
+        mocked.get(SUMMARIES, payload={"response": {"players": [private]}})
+        user = await User.get_user_details(STEAM_ID, client)
+
+    assert user.persona_name == "hidden"
+    assert user.community_visibility_state == 1
+    assert user.time_created is None
+    assert user.primary_clan_id is None
+    assert user.profile_state is None
+    assert user.real_name is None

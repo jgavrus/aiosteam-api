@@ -5,7 +5,8 @@ from aioresponses import CallbackResult, aioresponses
 
 from aiosteam_api.clients.requests_client import RequestsClient
 from conftest import (APP_DETAILS, APP_SEARCH, DISCOUNTED_PAGE, FULL_PRICE_PAGE, KEY, SEARCH_HTML, SUMMARIES,
-                      app_details, request_count, summaries)
+                      app_details, request_count, requested_urls,
+                      summaries)
 
 SUMMARIES_PATH = "/ISteamUser/GetPlayerSummaries/v2/"
 
@@ -133,3 +134,13 @@ async def test_search_games_fetches_discounts_per_result(client):
     assert result["apps"][1]["has_discount"] is False
     assert result["apps"][1]["discount"] is None
     assert request_count(mocked) == 3, "one search plus one store page per result"
+
+
+async def test_get_app_details_can_ask_for_the_whole_payload(client):
+    """filters=None is how the docstring says to get every key, and it must not become a literal None"""
+    with aioresponses() as mocked:
+        mocked.get(APP_DETAILS, payload=app_details(105600))
+        details = await client.get_app_details(105600, filters=None)
+
+    assert details["name"] == "App 105600"
+    assert "filters" not in requested_urls(mocked)[0]

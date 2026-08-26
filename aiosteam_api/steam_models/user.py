@@ -7,6 +7,7 @@ from aiosteam_api.clients.requests_client import RequestsClient
 from aiosteam_api.constants import STEAM_IDS_PER_REQUEST
 from aiosteam_api.exceptions.api_errors import NotFound
 from aiosteam_api.steam_models.badges import Badges
+from aiosteam_api.steam_models.bans import PlayerBans
 from aiosteam_api.steam_models.games import Game
 from aiosteam_api.steam_models.wishlist import WishlistItem
 
@@ -21,24 +22,38 @@ class UserAvatarModel(BaseModel):
 class User(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
+    # Only the first six are always in a GetPlayerSummaries entry. Everything below them is left out
+    # for a profile that is private or was never set up, so none of it may be required.
     steam_id: int
-    player_lvl: int | None
     community_visibility_state: int
-    profile_state: int
     persona_name: str
     profile_url: str
     avatar: UserAvatarModel
-    last_logoff: int | None
-    persona_state: int
-    real_name: str | None
-    primary_clan_id: int
-    time_created: int
-    persona_state_flags: int
-    loc_country_code: str | None
+    persona_state: int | None = None
+    player_lvl: int | None = None
+    profile_state: int | None = None
+    last_logoff: int | None = None
+    real_name: str | None = None
+    primary_clan_id: int | None = None
+    time_created: int | None = None
+    persona_state_flags: int | None = None
+    loc_country_code: str | None = None
+    loc_state_code: str | None = None
+    loc_city_id: int | None = None
+    comment_permission: int | None = None
+
+    # only present while the player is in a game right now
+    game_id: int | None = None
+    game_extra_info: str | None = None
+    game_server_ip: str | None = None
+    game_server_steam_id: int | None = None
+    lobby_steam_id: int | None = None
+
     friends: list['User'] | None
     last_played_games: dict[int, Game] | None
     owned_games: dict[int, Game] | None
     user_badges: Badges | None
+    bans: PlayerBans | None = None
     wishlist: dict[int, WishlistItem] | None = None
     relationship: str | None
     friend_since: int | None
@@ -61,6 +76,11 @@ class User(BaseModel):
             avatar_hash=inp.get('avatarhash'))
 
         return new_inp
+
+    @property
+    def is_in_game(self) -> bool:
+        """Whether the player is inside a game right now — `game_extra_info` is its name"""
+        return bool(self.game_id or self.game_extra_info)
 
     @staticmethod
     async def search_user(search: str, client: RequestsClient):
@@ -203,16 +223,23 @@ class User(BaseModel):
         """
         response = await self.client.request("get", "/IPlayerService/GetSteamLevel/v1/",
                                              params={"steamid": self.steam_id})
-        self.player_lvl = response.get("response", {}).get('player_level', 0)
-        return response.get("response", {})
+        payload = response.get("response") or {} if isinstance(response, dict) else {}
+        self.player_lvl = payload.get('player_level', 0)
+        return payload
 
     async def get_user_badges(self) -> Badges:
         """Gets user async_steam badges
         """
         response = await self.client.request("get", "/IPlayerService/GetBadges/v1/",
                                              params={"steamid": self.steam_id})
-        badges = Badges.model_validate(response.get("response", {}))
+        payload = response.get("response") or {} if isinstance(response, dict) else {}
+        badges = Badges.model_validate(payload)
         self.user_badges = badges
+        # the badge page carries the level too, so a caller that asked for badges needs no second
+        # request. GetSteamLevel stays authoritative — it also answers for a profile that hides its
+        # badges — so this only fills a level nobody has fetched yet, and never races with it.
+        if self.player_lvl is None and badges.player_level is not None:
+            self.player_lvl = badges.player_level
         return badges
 
     # async def get_community_badge_progress(self, badge_id: int or str) -> dict:
@@ -231,12 +258,17 @@ class User(BaseModel):
                                              params={"steamid": self.steam_id})
         return response
 
-    async def get_player_bans(self) -> dict:
+    async def get_player_bans(self) -> PlayerBans | None:
         """Gets account bans info
+
+        Steam answers with a list of players, which stays empty for an id it does not know — that is
+        the only case this returns None.
         """
         response = await self.client.request("get", "/ISteamUser/GetPlayerBans/v1",
                                              params={"steamids": self.steam_id})
-        return response
+        players = (response.get("players") or []) if isinstance(response, dict) else []
+        self.bans = PlayerBans.model_validate(players[0]) if players else None
+        return self.bans
 
     async def get_wishlist(self) -> dict[int, WishlistItem]:
         """Gets the user's wishlist, keyed by app id
