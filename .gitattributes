@@ -1,0 +1,8 @@
+# Keep source and config files on LF regardless of the checkout platform.
+# README.md is deliberately left alone: it is CRLF in the repo already.
+*.py text eol=lf
+*.toml text eol=lf
+*.cfg text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.txt text eol=lf
