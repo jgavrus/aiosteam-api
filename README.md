@@ -59,11 +59,34 @@ JSON Response example:
   "time_created": 1405203743,
   "persona_state_flags": 0,
   "loc_country_code": "UA",
+  "loc_state_code": "13",
+  "loc_city_id": 45621,
+  "comment_permission": 1,
+  "game_id": null,
+  "game_extra_info": null,
+  "game_server_ip": null,
+  "game_server_steam_id": null,
+  "lobby_steam_id": null,
   "friends": null,
   "last_played_games": null,
   "owned_games": null,
-  "user_badges": null
+  "user_badges": null,
+  "bans": null,
+  "wishlist": null
 }
+```
+
+Only `steam_id`, `community_visibility_state`, `persona_name`, `profile_url` and `avatar` are always
+there: Steam leaves the rest out of a profile that is private or was never set up, so everything else
+may be `None`.
+
+The `game_*` and `lobby_steam_id` fields are only filled while the player is **inside a game right now**,
+which is also what `user.is_in_game` answers:
+
+```python
+user = await steam.search_user("jeygavrus")
+if user.is_in_game:
+  print(user.persona_name, "is playing", user.game_extra_info)  # -> "kaine~ is playing Counter-Strike 2"
 ```
 
 ### friends, last_played_games, last_played_games, user_badges
@@ -267,13 +290,44 @@ async def some_async_foo():
 asyncio.run(some_async_foo())
 ```
 
-`get_info_from_shop()` fills `required_age`, `is_free`, `detailed_description`, `about_the_game`,
-`short_description`, `supported_languages`, `header_image`, `capsule_image`, `capsule_imagev5`,
-`website`, `pc_requirements`, `mac_requirements`, `linux_requirements` and `dlc` (a list of `Game`,
-fetched concurrently).
+`get_info_from_shop()` copies **the whole appdetails payload** onto the model. The parts with a shape
+worth keeping become models of their own:
+
+| Field | Model | Example |
+|---|---|---|
+| `price_overview` | `PriceOverview` | `.final` is in hundredths (`143920`), `.final_price` is `1439.2`, `.final_formatted` is `"1 439₴"` |
+| `release_date` | `ReleaseDate` | `.date` is Steam's own string, `.as_date` is a `datetime.date` or `None` for "Q1 2026" |
+| `metacritic` | `Metacritic` | `.score`, `.url` |
+| `platforms` | `Platforms` | `.windows`, `.mac`, `.linux` |
+| `genres`, `categories` | `list[StoreTag]` | `.id`, `.description` |
+| `achievements` | `AppAchievements` | `.total` — how many the app has, not the player's progress |
+| `recommendations` | `Recommendations` | `.total` — the review count |
+| `support_info` | `SupportInfo` | `.url`, `.email` |
+| `content_descriptors` | `ContentDescriptors` | `.ids`, `.notes` |
+
+Plain fields come across as they are: `type`, `is_free`, `required_age`, `controller_support`,
+`developers`, `publishers`, `packages`, `package_groups`, `screenshots`, `movies`, `demos`, `ratings`,
+`background`, `reviews`, the three `*_requirements`, the descriptions, the images, and `dlc` (a list of
+`Game`, fetched concurrently).
 
 `supported_languages` is parsed into a dict, e.g. `{"English": "full", "French": "text"}` — `full` means
 full audio support.
+
+Two arguments decide how much is fetched and from which store:
+
+```python
+await game.get_info_from_shop(country="UA")               # the whole payload, prices in UAH
+await game.get_info_from_shop(filters="price_overview")   # only what you name
+```
+
+`country` matters because the store answers with its own currency, and `filters=None` (the default) is
+what makes the price, genres, release date and ratings show up at all — Steam's own `"basic"` filter
+leaves every one of them out. `WishlistItem.get_game()` takes the same two arguments.
+
+The playtime fields of an owned game are filled by `get_owned_games()`, not by the store: `playtime_forever`
+and `playtime_two_weeks` alongside the per-platform `playtime_windows_forever`, `playtime_mac_forever`,
+`playtime_linux_forever`, `playtime_deck_forever`, plus `rtime_last_played` (`game.last_played` gives it as
+a `datetime`), `playtime_disconnected`, `has_community_visible_stats` and `content_descriptorids`.
 
 ### User stats and achievements for a game
 
@@ -282,8 +336,16 @@ Both use the `from_user_id` the game was fetched with, so no steam id is needed.
 ```python
 game = (await user.get_owned_games())[105600]
 print(await game.get_user_stats())
-print(await game.get_user_achievements(language="uk"))  # defaults to "en"
+
+achievements = await game.get_user_achievements(language="uk")  # defaults to "en"
+print(achievements[0].name, achievements[0].achieved, achievements[0].unlock_time)
+print(game.unlocked_achievements, "of", len(achievements))
 ```
+
+`get_user_achievements()` returns a `list[PlayerAchievement]` and also leaves it on
+`game.player_achievements`; the untouched response stays in `game.user_achievements`, which is where
+Steam's error message for a private profile ends up. A profile that hides its achievements gives an
+empty list rather than an error.
 
 `game.get_all_info()` runs `get_info_from_shop()`, `get_user_achievements()` and `get_user_stats()`
 together.
@@ -343,27 +405,29 @@ from aiosteam_api import Steam
 async def some_async_foo():
   async with Steam("STEAM_API_KEY") as steam:
     user = await steam.search_user("jeygavrus")
-    print(await user.get_player_bans())
+    bans = await user.get_player_bans()
+    print(bans.is_clean, bans.number_of_vac_bans, bans.days_since_last_ban)
 
 
 asyncio.run(some_async_foo())
 ```
 
+Returns a `PlayerBans` (also left on `user.bans`), or `None` for an id Steam does not know:
+
 ```json
 {
-  "players": [
-    {
-      "SteamId": "76561198144619553",
-      "CommunityBanned": false,
-      "VACBanned": false,
-      "NumberOfVACBans": 0,
-      "DaysSinceLastBan": 0,
-      "NumberOfGameBans": 0,
-      "EconomyBan": "none"
-    }
-  ]
+  "steam_id": 76561198144619553,
+  "community_banned": false,
+  "vac_banned": false,
+  "number_of_vac_bans": 0,
+  "days_since_last_ban": 0,
+  "number_of_game_bans": 0,
+  "economy_ban": "none"
 }
 ```
+
+`days_since_last_ban` is 0 both for an account that was never banned and for one banned today, so read it
+together with the counters — or just use `bans.is_clean`.
 
 # Errors
 
